@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from "motion/react";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Volume2, VolumeX, ChevronDown } from "lucide-react";
 
 export function HeroSection() {
@@ -15,7 +15,7 @@ export function HeroSection() {
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
 
   return (
-    <div ref={containerRef} className="relative h-screen overflow-hidden">
+    <section id="home" ref={containerRef} className="relative min-h-screen overflow-hidden scroll-mt-24">
       {/* Animated Background - Dark aqua gradient */}
       <motion.div 
         style={{ y: backgroundY }}
@@ -66,7 +66,7 @@ export function HeroSection() {
       {/* Sound toggle */}
       <button
         onClick={() => setSoundEnabled(!soundEnabled)}
-        className="absolute top-8 right-8 z-50 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300"
+        className="absolute top-24 right-4 sm:right-6 md:right-8 z-30 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 min-h-11 min-w-11"
       >
         {soundEnabled ? (
           <Volume2 className="w-5 h-5 text-white" />
@@ -78,7 +78,7 @@ export function HeroSection() {
       {/* Main content */}
       <motion.div 
         style={{ opacity }}
-        className="relative z-10 h-full flex flex-col items-center justify-center px-6 py-12"
+        className="relative z-10 h-full flex flex-col items-center justify-center px-4 sm:px-6 pt-28 pb-12 sm:pb-16"
       >
         {/* Large center-focused hyper-realistic 3D bottle */}
         <motion.div
@@ -109,7 +109,7 @@ export function HeroSection() {
               transformStyle: 'preserve-3d',
             }}
           >
-            <div className="scale-75 md:scale-90 lg:scale-100">
+            <div className="w-[clamp(140px,40vw,200px)]">
               <RealisticLifeeBottle />
             </div>
           </motion.div>
@@ -143,10 +143,10 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 1 }}
-          className="text-center max-w-4xl space-y-6"
+          className="text-center max-w-4xl space-y-5 sm:space-y-6"
         >
           <motion.h1 
-            className="text-5xl md:text-7xl font-bold text-white tracking-tight"
+            className="text-[clamp(2rem,8vw,4.5rem)] font-bold text-white tracking-tight leading-tight"
             style={{
               textShadow: '0 0 40px rgba(14, 165, 233, 0.5)',
             }}
@@ -158,24 +158,24 @@ export function HeroSection() {
             </span>
           </motion.h1>
 
-          <p className="text-lg md:text-xl text-cyan-100 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-[clamp(1rem,3vw,1.25rem)] text-cyan-100 max-w-2xl mx-auto leading-relaxed">
             Crafted with advanced purification technology, delivering unmatched 
             freshness and safety in every drop across Madhya Pradesh.
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-6 sm:pt-8 w-full sm:w-auto">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 bg-gradient-to-r from-cyan-400 to-blue-500 text-white rounded-full font-semibold shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all duration-300"
+              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-cyan-400 to-blue-500 text-white rounded-full font-semibold shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all duration-300"
             >
               Order Now
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-white/30 text-white rounded-full font-semibold hover:bg-white/20 transition-all duration-300"
+              className="w-full sm:w-auto px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-white/30 text-white rounded-full font-semibold hover:bg-white/20 transition-all duration-300"
             >
               Become a Distributor
             </motion.button>
@@ -194,21 +194,16 @@ export function HeroSection() {
 
       {/* Glassmorphic overlay for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20 pointer-events-none" />
-    </div>
+    </section>
   );
 }
 
 // Hyper-realistic LIFEE bottle component with condensation and water effects
 function RealisticLifeeBottle() {
-  const bottleWidth = 200;
-  const bottleHeight = 500;
-
   return (
     <div 
-      className="relative"
+      className="relative w-full aspect-[2/5]"
       style={{ 
-        width: bottleWidth,
-        height: bottleHeight,
         filter: 'drop-shadow(0 30px 60px rgba(0, 0, 0, 0.4))',
       }}
     >
@@ -435,7 +430,7 @@ function RealisticLifeeBottle() {
       <div 
         className="absolute bottom-0 left-1/2 -translate-x-1/2"
         style={{
-          width: bottleWidth * 0.5,
+          width: '50%',
           height: 30,
           background: 'radial-gradient(ellipse, rgba(0, 0, 0, 0.4), transparent)',
           filter: 'blur(12px)',

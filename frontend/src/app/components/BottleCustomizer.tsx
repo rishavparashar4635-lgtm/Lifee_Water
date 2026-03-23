@@ -80,8 +80,9 @@ export function BottleCustomizer() {
 
   return (
     <section 
+      id="customizer"
       ref={ref}
-      className="relative py-24 px-6 bg-gradient-to-br from-slate-900 to-[#0A2540] overflow-hidden"
+      className="relative py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-br from-slate-900 to-[#0A2540] overflow-hidden scroll-mt-24"
     >
       {/* Background effects */}
       <div className="absolute inset-0 opacity-10">
@@ -102,7 +103,7 @@ export function BottleCustomizer() {
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-[clamp(1.8rem,6vw,3rem)] font-bold text-white mb-6 leading-tight">
             Craft Your{" "}
             <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
               Signature Bottle
@@ -115,7 +116,7 @@ export function BottleCustomizer() {
 
         {!selectedOccasion ? (
           /* STEP 1: SELECT OCCASION - Realistic integrated bottles */
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {occasions.map((occasion, index) => {
               const Icon = occasion.icon;
               return (
@@ -244,11 +245,11 @@ export function BottleCustomizer() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="grid lg:grid-cols-2 gap-12">
+            <div className="grid lg:grid-cols-2 gap-8 md:gap-12">
               {/* LEFT: 3D Bottle Preview */}
               <div className="relative">
                 <div className="sticky top-8">
-                  <div className="relative aspect-square rounded-3xl bg-gradient-to-br from-white/5 to-white/5 backdrop-blur-lg border border-white/10 p-12 flex items-center justify-center overflow-hidden">
+                  <div className="relative aspect-square rounded-3xl bg-gradient-to-br from-white/5 to-white/5 backdrop-blur-lg border border-white/10 p-5 sm:p-8 lg:p-12 flex items-center justify-center overflow-hidden">
                     {/* Lighting effects */}
                     <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl" />
                     <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
@@ -296,7 +297,7 @@ export function BottleCustomizer() {
                   ← Back to occasions
                 </motion.button>
 
-                <div className="p-8 rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 space-y-6">
+                <div className="p-5 sm:p-8 rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 space-y-6">
                   {/* Upload Image */}
                   <div className="space-y-3">
                     <label className="text-white font-semibold">Upload Image</label>
@@ -361,7 +362,7 @@ export function BottleCustomizer() {
                   {/* Label Finish */}
                   <div className="space-y-3">
                     <label className="text-white font-semibold">Label Finish</label>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {(["matte", "glossy"] as const).map((finish) => (
                         <motion.button
                           key={finish}
@@ -387,7 +388,7 @@ export function BottleCustomizer() {
                   <div className="pt-6 border-t border-white/10 space-y-4">
                     <h3 className="text-white font-semibold text-lg">Order Details</h3>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-white text-sm">Quantity</label>
                         <input
@@ -412,7 +413,7 @@ export function BottleCustomizer() {
                   </div>
 
                   {/* CTAs */}
-                  <div className="grid grid-cols-2 gap-4 pt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -451,15 +452,10 @@ interface RealisticCustomBottleProps {
 }
 
 function RealisticCustomBottle({ labelColor, labelSecondary, labelTextColor, text, subtext, message, image, finish }: RealisticCustomBottleProps) {
-  const bottleWidth = 220;
-  const bottleHeight = 550;
-
   return (
     <div 
-      className="relative"
+      className="relative w-[clamp(150px,45vw,220px)] aspect-[2/5]"
       style={{ 
-        width: bottleWidth,
-        height: bottleHeight,
         filter: 'drop-shadow(0 30px 60px rgba(0, 0, 0, 0.4))',
       }}
     >
@@ -668,7 +664,7 @@ function RealisticCustomBottle({ labelColor, labelSecondary, labelTextColor, tex
       <div 
         className="absolute bottom-0 left-1/2 -translate-x-1/2"
         style={{
-          width: bottleWidth * 0.5,
+          width: '50%',
           height: 30,
           background: 'radial-gradient(ellipse, rgba(0, 0, 0, 0.4), transparent)',
           filter: 'blur(12px)',
