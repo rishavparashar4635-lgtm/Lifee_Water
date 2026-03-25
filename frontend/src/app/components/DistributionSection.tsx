@@ -1,5 +1,5 @@
-import { motion, useInView } from "motion/react";
-import { useRef, useState } from "react";
+import { m, useInView } from "motion/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapPin, Users, TrendingUp } from "lucide-react";
 
 const cities = [
@@ -16,6 +16,14 @@ const cities = [
 export function DistributionSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const decorativeDotLayout = useMemo(
+    () =>
+      [...Array(4)].map(() => ({
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+      })),
+    []
+  );
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,44 +34,59 @@ export function DistributionSection() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
+  const fetchAbortRef = useRef<AbortController | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading) return;
+  useEffect(() => {
+    return () => {
+      fetchAbortRef.current?.abort();
+    };
+  }, []);
 
-    if (!formData.name || !formData.email || !formData.phone) {
-      setStatus("error: Name, email and phone are required.");
-      return;
-    }
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (loading) return;
 
-    setLoading(true);
-    setStatus("");
-    try {
-      const response = await fetch("http://localhost:5000/api/email/distributor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          city: formData.city,
-          businessName: formData.businessName,
-        }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setStatus("success: Distributor request sent successfully!");
-        setFormData({ name: "", email: "", phone: "", city: "", businessName: "" });
-        setShowForm(false);
-      } else {
-        setStatus("error: " + (data.error || "Failed to submit distributor request"));
+      if (!formData.name || !formData.email || !formData.phone) {
+        setStatus("error: Name, email and phone are required.");
+        return;
       }
-    } catch (_error) {
-      setStatus("error: Cannot connect to server");
-    } finally {
-      setLoading(false);
-    }
-  };
+
+      fetchAbortRef.current?.abort();
+      const ac = new AbortController();
+      fetchAbortRef.current = ac;
+      setLoading(true);
+      setStatus("");
+      try {
+        const response = await fetch("http://localhost:5000/api/email/distributor", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: ac.signal,
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            city: formData.city,
+            businessName: formData.businessName,
+          }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          setStatus("success: Distributor request sent successfully!");
+          setFormData({ name: "", email: "", phone: "", city: "", businessName: "" });
+          setShowForm(false);
+        } else {
+          setStatus("error: " + (data.error || "Failed to submit distributor request"));
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+        setStatus("error: Cannot connect to server");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [formData, loading]
+  );
 
   return (
     <section
@@ -85,7 +108,7 @@ export function DistributionSection() {
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left content */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: -50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8 }}
@@ -113,7 +136,7 @@ export function DistributionSection() {
               ].map((stat, i) => {
                 const Icon = stat.icon;
                 return (
-                  <motion.div
+                  <m.div
                     key={i}
                     initial={{ opacity: 0, y: 20 }}
                     animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -123,7 +146,7 @@ export function DistributionSection() {
                     <Icon className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-white">{stat.value}</div>
                     <div className="text-xs text-cyan-100/60">{stat.label}</div>
-                  </motion.div>
+                  </m.div>
                 );
               })}
             </div>
@@ -136,7 +159,7 @@ export function DistributionSection() {
                 "Exclusive territory rights",
                 "Training & technical assistance",
               ].map((benefit, i) => (
-                <motion.div
+                <m.div
                   key={i}
                   initial={{ opacity: 0, x: -20 }}
                   animate={isInView ? { opacity: 1, x: 0 } : {}}
@@ -145,13 +168,13 @@ export function DistributionSection() {
                 >
                   <div className="w-2 h-2 rounded-full bg-cyan-400" />
                   {benefit}
-                </motion.div>
+                </m.div>
               ))}
             </div>
 
             {/* CTA / Form */}
             {!showForm ? (
-              <motion.button
+              <m.button
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 1, duration: 0.6 }}
@@ -165,15 +188,15 @@ export function DistributionSection() {
                 className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full font-semibold shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all duration-300"
               >
                 {loading ? "Sending..." : "Become a Distributor"}
-              </motion.button>
+              </m.button>
             ) : (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 1, duration: 0.6 }}
                 className="relative p-5 sm:p-8 rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl"
               >
-                <motion.div
+                <m.div
                   animate={{
                     opacity: [0.3, 0.5, 0.3],
                   }}
@@ -244,7 +267,7 @@ export function DistributionSection() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <motion.button
+                    <m.button
                       type="submit"
                       disabled={loading}
                       whileHover={{ scale: 1.02 }}
@@ -252,9 +275,9 @@ export function DistributionSection() {
                       className="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {loading ? "Sending..." : "Submit Request"}
-                    </motion.button>
+                    </m.button>
 
-                    <motion.button
+                    <m.button
                       type="button"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -265,10 +288,10 @@ export function DistributionSection() {
                       className="flex-1 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl font-semibold hover:bg-white/20 transition-all duration-300"
                     >
                       Cancel
-                    </motion.button>
+                    </m.button>
                   </div>
                 </form>
-              </motion.div>
+              </m.div>
             )}
 
             {status.startsWith("success") && (
@@ -277,10 +300,10 @@ export function DistributionSection() {
             {status.startsWith("error") && (
               <p className="text-red-400">❌ {status.replace(/^error:\s*/i, "")}</p>
             )}
-          </motion.div>
+          </m.div>
 
           {/* Right - Futuristic MP Map */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8 }}
@@ -296,7 +319,7 @@ export function DistributionSection() {
                   style={{ filter: "drop-shadow(0 0 20px rgba(14, 165, 233, 0.3))" }}
                 >
                   {/* MP state shape (simplified) */}
-                  <motion.path
+                  <m.path
                     initial={{ pathLength: 0 }}
                     animate={isInView ? { pathLength: 1 } : {}}
                     transition={{ duration: 2, ease: "easeInOut" }}
@@ -313,7 +336,7 @@ export function DistributionSection() {
                   </defs>
 
                   {/* Fill with pattern */}
-                  <motion.path
+                  <m.path
                     initial={{ opacity: 0 }}
                     animate={isInView ? { opacity: 0.1 } : {}}
                     transition={{ delay: 1, duration: 1 }}
@@ -324,8 +347,8 @@ export function DistributionSection() {
 
                 {/* City nodes */}
                 {cities.map((city, i) => (
-                  <motion.div
-                    key={i}
+                  <m.div
+                    key={city.name}
                     initial={{ opacity: 0, scale: 0 }}
                     animate={isInView ? { opacity: 1, scale: 1 } : {}}
                     transition={{ delay: 1 + i * 0.15, type: "spring" }}
@@ -337,7 +360,7 @@ export function DistributionSection() {
                     }}
                   >
                     {/* Pulsing effect */}
-                    <motion.div
+                    <m.div
                       animate={{
                         scale: [1, 1.5, 1],
                         opacity: [0.5, 0, 0.5],
@@ -351,23 +374,23 @@ export function DistributionSection() {
                     />
 
                     {/* Node */}
-                    <motion.div
+                    <m.div
                       whileHover={{ scale: 1.5 }}
                       className="relative w-3 h-3 rounded-full bg-cyan-400 shadow-lg shadow-cyan-400/50"
                     />
 
                     {/* City label */}
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0 }}
                       whileHover={{ opacity: 1 }}
                       className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-white bg-black/60 px-2 py-1 rounded pointer-events-none"
                     >
                       {city.name}
-                    </motion.div>
+                    </m.div>
 
                     {/* Connection lines */}
                     {i > 0 && (
-                      <motion.div
+                      <m.div
                         initial={{ scaleX: 0 }}
                         animate={isInView ? { scaleX: 1 } : {}}
                         transition={{ delay: 1.5 + i * 0.1, duration: 0.5 }}
@@ -375,11 +398,11 @@ export function DistributionSection() {
                         style={{ width: "50px" }}
                       />
                     )}
-                  </motion.div>
+                  </m.div>
                 ))}
 
                 {/* Glowing effect */}
-                <motion.div
+                <m.div
                   animate={{
                     opacity: [0.3, 0.6, 0.3],
                   }}
@@ -392,9 +415,9 @@ export function DistributionSection() {
               </div>
 
               {/* Decorative elements */}
-              {[...Array(4)].map((_, i) => (
-                <motion.div
-                  key={i}
+              {decorativeDotLayout.map((pos, i) => (
+                <m.div
+                  key={`dist-decor-${i}`}
                   animate={{
                     y: [-10, 10, -10],
                     opacity: [0.2, 0.5, 0.2],
@@ -405,14 +428,11 @@ export function DistributionSection() {
                     delay: i * 0.5,
                   }}
                   className="absolute w-2 h-2 bg-cyan-400 rounded-full blur-sm"
-                  style={{
-                    top: `${Math.random() * 100}%`,
-                    left: `${Math.random() * 100}%`,
-                  }}
+                  style={pos}
                 />
               ))}
             </div>
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </section>

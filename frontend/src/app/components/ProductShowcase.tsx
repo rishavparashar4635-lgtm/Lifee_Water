@@ -1,5 +1,28 @@
-import { motion, useInView } from "motion/react";
-import { useRef } from "react";
+import type { CSSProperties } from "react";
+import { m, useInView } from "motion/react";
+import { useMemo, useRef } from "react";
+
+const PRODUCT_CARD_IMAGE_STYLE: CSSProperties = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  objectPosition: "center top",
+  mixBlendMode: "luminosity",
+  filter: "brightness(1.12) contrast(1.12) drop-shadow(0 0 25px rgba(14, 165, 233, 0.35))",
+};
+
+const PRODUCT_CARD_REFLECTION_STYLE: CSSProperties = {
+  background: "radial-gradient(ellipse, rgba(14, 165, 233, 0.5), transparent)",
+  filter: "blur(8px)",
+};
+
+const PRODUCT_HOVER_GLOW_STYLE: CSSProperties = {
+  background: "radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.15), transparent 70%)",
+};
 
 const products = [
   { 
@@ -38,17 +61,26 @@ export function ProductShowcase() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
+  const blobLayout = useMemo(
+    () =>
+      [...Array(5)].map(() => ({
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+      })),
+    []
+  );
+
   return (
     <section 
       id="products"
       ref={ref}
-      className="relative py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-br from-[#0A2540] to-slate-900 overflow-hidden scroll-mt-24"
+      className="relative py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-br from-[#0A2540] to-slate-900 overflow-hidden scroll-mt-20"
     >
       {/* Animated background elements */}
       <div className="absolute inset-0">
-        {[...Array(5)].map((_, i) => (
-          <motion.div
-            key={i}
+        {blobLayout.map((pos, i) => (
+          <m.div
+            key={`product-blob-${i}`}
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.1, 0.2, 0.1],
@@ -60,17 +92,14 @@ export function ProductShowcase() {
               delay: i * 2,
             }}
             className="absolute w-96 h-96 bg-cyan-500 rounded-full blur-3xl"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-            }}
+            style={pos}
           />
         ))}
       </div>
 
       <div className="container mx-auto max-w-7xl relative z-10">
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
@@ -85,13 +114,13 @@ export function ProductShowcase() {
           <p className="text-cyan-100/80 text-lg max-w-2xl mx-auto">
             Designed for every moment — from everyday hydration to bulk home and office needs.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Product cards with realistic bottles */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {products.map((product, index) => (
-            <motion.div
-              key={index}
+            <m.div
+              key={product.size}
               initial={{ opacity: 0, y: 50, rotateY: -15 }}
               animate={isInView ? { opacity: 1, y: 0, rotateY: 0 } : {}}
               transition={{ delay: index * 0.1, duration: 0.6 }}
@@ -116,31 +145,21 @@ export function ProductShowcase() {
                   {/* Product lighting */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl" />
                   
-                  <motion.img
+                  <m.img
                     src={product.image}
                     alt={product.size}
+                    width={400}
+                    height={560}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "50%",
-                      transform: "translate(-50%, -50%)",
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      objectPosition: "center top",
-                      mixBlendMode: "luminosity",
-                      filter: "brightness(1.12) contrast(1.12) drop-shadow(0 0 25px rgba(14, 165, 233, 0.35))",
-                    }}
+                    style={PRODUCT_CARD_IMAGE_STYLE}
                   />
 
                   {/* Reflection under bottle */}
                   <div 
                     className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-8 opacity-30"
-                    style={{
-                      background: 'radial-gradient(ellipse, rgba(14, 165, 233, 0.5), transparent)',
-                      filter: 'blur(8px)',
-                    }}
+                    style={PRODUCT_CARD_REFLECTION_STYLE}
                   />
                 </div>
 
@@ -160,19 +179,17 @@ export function ProductShowcase() {
                 </div>
 
                 {/* Hover glow effect */}
-                <motion.div
+                <m.div
                   className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{
-                    background: 'radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.15), transparent 70%)',
-                  }}
+                  style={PRODUCT_HOVER_GLOW_STYLE}
                 />
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
 
         {/* Special offer badge */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={isInView ? { opacity: 1, scale: 1 } : {}}
           transition={{ delay: 0.8, duration: 0.6 }}
@@ -184,7 +201,7 @@ export function ProductShowcase() {
               Bulk orders available • Contact us for wholesale pricing
             </span>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </section>
   );

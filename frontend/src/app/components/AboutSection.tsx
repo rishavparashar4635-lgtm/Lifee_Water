@@ -1,4 +1,4 @@
-import { motion, useInView } from "motion/react";
+import { m, useInView } from "motion/react";
 import { useRef } from "react";
 
 export function AboutSection() {
@@ -9,16 +9,16 @@ export function AboutSection() {
     <section 
       id="about"
       ref={ref}
-      className="relative min-h-screen flex items-center py-20 md:py-24 px-4 sm:px-6 overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 scroll-mt-24"
+      className="relative min-h-screen flex items-center py-20 md:py-24 px-4 sm:px-6 overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 scroll-mt-20"
     >
       {/* Flowing water visual */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 1.2 }}
         animate={isInView ? { opacity: 0.2, scale: 1 } : {}}
         transition={{ duration: 1.5 }}
         className="absolute right-0 top-0 w-1/2 h-full"
       >
-        <motion.div
+        <m.div
           animate={{
             backgroundPosition: ['0% 0%', '100% 100%'],
           }}
@@ -32,20 +32,24 @@ export function AboutSection() {
         <img
           src="https://images.unsplash.com/photo-1765605501047-f949141e505e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3YXRlciUyMHdhdmUlMjBhYnN0cmFjdHxlbnwxfHx8fDE3NzM3NzY4MTR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
           alt="Water waves"
+          width={1080}
+          height={720}
+          loading="lazy"
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay"
         />
-      </motion.div>
+      </m.div>
 
       {/* Content */}
       <div className="container mx-auto max-w-6xl relative z-10">
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: -50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8 }}
             className="space-y-8"
           >
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.2, duration: 0.8 }}
@@ -56,9 +60,9 @@ export function AboutSection() {
                   Storytelling
                 </span>
               </h2>
-            </motion.div>
+            </m.div>
 
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.4, duration: 0.8 }}
@@ -78,9 +82,9 @@ export function AboutSection() {
                 </span>
                 .
               </p>
-            </motion.div>
+            </m.div>
 
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -98,17 +102,17 @@ export function AboutSection() {
                   <div className="text-sm text-cyan-300/70 mt-1">{stat.label}</div>
                 </div>
               ))}
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
 
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.3 }}
             className="relative"
           >
             <div className="relative p-8 rounded-3xl bg-white/5 backdrop-blur-lg border border-white/10 shadow-2xl">
-              <motion.div
+              <m.div
                 animate={{
                   boxShadow: [
                     '0 0 40px rgba(14, 165, 233, 0.3)',
@@ -123,15 +127,19 @@ export function AboutSection() {
                 className="absolute inset-0 rounded-3xl"
               />
               <img
-                src="/images/lifee-bottle1L.png"  
+                src="/images/lifee-bottle1L.png"
                 alt="Natural water source"
+                width={800}
+                height={1000}
+                loading="lazy"
+                decoding="async"
                 className="relative w-full h-auto rounded-2xl"
               />
             </div>
 
             {/* Floating elements */}
             {[...Array(3)].map((_, i) => (
-              <motion.div
+              <m.div
                 key={i}
                 animate={{
                   y: [0, -20, 0],
@@ -149,7 +157,7 @@ export function AboutSection() {
                 }}
               />
             ))}
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </section>

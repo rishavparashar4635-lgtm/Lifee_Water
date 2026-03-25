@@ -1,4 +1,4 @@
-import { motion, useInView } from "motion/react";
+import { m, useInView } from "motion/react";
 import { useRef } from "react";
 import { Award, ShieldCheck, FlaskConical, BadgeCheck } from "lucide-react";
 
@@ -47,13 +47,13 @@ export function QualityCertification() {
 
       <div className="container mx-auto max-w-6xl relative z-10">
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <motion.div
+          <m.div
             animate={{
               scale: [1, 1.05, 1],
             }}
@@ -68,18 +68,18 @@ export function QualityCertification() {
                 Trusted.
               </span>
             </h2>
-          </motion.div>
+          </m.div>
           <p className="text-cyan-100/80 text-lg max-w-2xl mx-auto">
             Our commitment to quality is backed by multiple certifications and rigorous testing protocols
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Certifications grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {certifications.map((cert, index) => {
             const Icon = cert.icon;
             return (
-              <motion.div
+              <m.div
                 key={index}
                 initial={{ opacity: 0, y: 50, scale: 0.8 }}
                 animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
@@ -89,7 +89,7 @@ export function QualityCertification() {
               >
                 <div className="relative p-8 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg border border-white/10 shadow-2xl h-full">
                   {/* Glow effect */}
-                  <motion.div
+                  <m.div
                     animate={{
                       opacity: [0.5, 1, 0.5],
                       scale: [1, 1.2, 1],
@@ -104,7 +104,7 @@ export function QualityCertification() {
 
                   <div className="relative z-10 flex flex-col items-center text-center space-y-4">
                     {/* Icon with glow */}
-                    <motion.div
+                    <m.div
                       animate={{
                         rotate: [0, 5, -5, 0],
                       }}
@@ -115,7 +115,7 @@ export function QualityCertification() {
                       }}
                       className="relative"
                     >
-                      <motion.div
+                      <m.div
                         animate={{
                           boxShadow: [
                             '0 0 20px rgba(14, 165, 233, 0.5)',
@@ -130,10 +130,10 @@ export function QualityCertification() {
                         className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center"
                       >
                         <Icon className="w-10 h-10 text-white" />
-                      </motion.div>
+                      </m.div>
 
                       {/* Badge checkmark */}
-                      <motion.div
+                      <m.div
                         initial={{ scale: 0 }}
                         animate={isInView ? { scale: 1 } : {}}
                         transition={{ delay: index * 0.15 + 0.3, type: "spring" }}
@@ -142,8 +142,8 @@ export function QualityCertification() {
                         <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
-                      </motion.div>
-                    </motion.div>
+                      </m.div>
+                    </m.div>
 
                     {/* Text */}
                     <div className="space-y-2">
@@ -156,13 +156,13 @@ export function QualityCertification() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             );
           })}
         </div>
 
         {/* Bottom stats */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.8, duration: 0.8 }}
@@ -170,7 +170,7 @@ export function QualityCertification() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="space-y-2">
-              <motion.div
+              <m.div
                 animate={{
                   scale: [1, 1.1, 1],
                 }}
@@ -182,11 +182,11 @@ export function QualityCertification() {
                 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent"
               >
                 100+
-              </motion.div>
+              </m.div>
               <p className="text-cyan-100/70">Quality Tests Daily</p>
             </div>
             <div className="space-y-2">
-              <motion.div
+              <m.div
                 animate={{
                   scale: [1, 1.1, 1],
                 }}
@@ -198,11 +198,11 @@ export function QualityCertification() {
                 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent"
               >
                 99.9%
-              </motion.div>
+              </m.div>
               <p className="text-cyan-100/70">Purity Guaranteed</p>
             </div>
             <div className="space-y-2">
-              <motion.div
+              <m.div
                 animate={{
                   scale: [1, 1.1, 1],
                 }}
@@ -214,11 +214,11 @@ export function QualityCertification() {
                 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent"
               >
                 24/7
-              </motion.div>
+              </m.div>
               <p className="text-cyan-100/70">Quality Monitoring</p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </section>
   );

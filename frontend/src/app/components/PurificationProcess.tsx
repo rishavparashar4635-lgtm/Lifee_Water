@@ -1,4 +1,4 @@
-import { motion, useInView } from "motion/react";
+import { m, useInView } from "motion/react";
 import { useRef, useState } from "react";
 import { Droplets, Shield, Zap, Filter, Package } from "lucide-react";
 
@@ -50,7 +50,7 @@ export function PurificationProcess() {
     <section 
       id="process"
       ref={ref}
-      className="relative py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-b from-slate-800 to-[#0A2540] overflow-hidden scroll-mt-24"
+      className="relative py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-b from-slate-800 to-[#0A2540] overflow-hidden scroll-mt-20"
     >
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
@@ -65,7 +65,7 @@ export function PurificationProcess() {
 
       <div className="container mx-auto max-w-7xl relative z-10">
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
@@ -80,19 +80,19 @@ export function PurificationProcess() {
           <p className="text-cyan-100/80 text-lg max-w-2xl mx-auto">
             Tech Visual Flow: Advanced 6-stage purification system
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Pipeline visualization */}
         <div className="relative">
           {/* Connecting line */}
           <div className="absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2 hidden lg:block">
-            <motion.div
+            <m.div
               initial={{ scaleX: 0 }}
               animate={isInView ? { scaleX: 1 } : {}}
               transition={{ duration: 2, ease: "easeInOut" }}
               className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 origin-left rounded-full"
             />
-            <motion.div
+            <m.div
               animate={{
                 backgroundPosition: ['0% 0%', '200% 0%'],
               }}
@@ -113,7 +113,7 @@ export function PurificationProcess() {
             {steps.map((step, index) => {
               const Icon = step.icon;
               return (
-                <motion.div
+                <m.div
                   key={index}
                   initial={{ opacity: 0, y: 50 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -126,7 +126,7 @@ export function PurificationProcess() {
                     {/* Realistic 3D-style icon with glass/neon effect */}
                     <div className="relative mb-6 flex justify-center">
                       {/* Glow effect behind icon */}
-                      <motion.div
+                      <m.div
                         animate={hoveredIndex === index ? {
                           boxShadow: [
                             `0 0 20px ${step.color}60`,
@@ -140,7 +140,7 @@ export function PurificationProcess() {
                       />
                       
                       {/* Realistic 3D icon container with depth */}
-                      <motion.div
+                      <m.div
                         whileHover={{ scale: 1.1, rotateY: 10 }}
                         transition={{ duration: 0.3 }}
                         className="relative w-24 h-24 rounded-2xl flex items-center justify-center"
@@ -164,7 +164,7 @@ export function PurificationProcess() {
                         />
                         
                         {/* Icon with glow */}
-                        <motion.div
+                        <m.div
                           animate={hoveredIndex === index ? {
                             filter: [
                               `drop-shadow(0 0 8px ${step.color})`,
@@ -179,18 +179,18 @@ export function PurificationProcess() {
                             style={{ color: step.color, filter: 'brightness(1.3)' }}
                             strokeWidth={1.5}
                           />
-                        </motion.div>
+                        </m.div>
 
                         {/* Inner highlight for 3D depth */}
                         <div 
                           className="absolute top-2 left-2 w-8 h-8 rounded-full opacity-50 blur-sm"
                           style={{ background: 'rgba(255, 255, 255, 0.4)' }}
                         />
-                      </motion.div>
+                      </m.div>
 
                       {/* Soft glow on hover - light pulse effect */}
                       {hoveredIndex === index && (
-                        <motion.div
+                        <m.div
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1.2 }}
                           exit={{ opacity: 0, scale: 0.8 }}
@@ -216,21 +216,21 @@ export function PurificationProcess() {
                     </div>
 
                     {/* Hover glow effect around card */}
-                    <motion.div
+                    <m.div
                       className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                       style={{
                         background: `radial-gradient(circle at 50% 50%, ${step.color}20, transparent 70%)`,
                       }}
                     />
                   </div>
-                </motion.div>
+                </m.div>
               );
             })}
           </div>
         </div>
 
         {/* Quality badge */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.8, duration: 0.8 }}
@@ -242,7 +242,7 @@ export function PurificationProcess() {
               ISO 9001:2015 Certified Process
             </span>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </section>
   );

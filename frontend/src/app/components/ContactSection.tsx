@@ -1,5 +1,5 @@
-import { motion, useInView } from "motion/react";
-import { useRef, useState } from "react";
+import { m, useInView } from "motion/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Send, Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 
 export function ContactSection() {
@@ -14,48 +14,63 @@ export function ContactSection() {
   });
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
+  const fetchAbortRef = useRef<AbortController | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setStatus("");
+  useEffect(() => {
+    return () => {
+      fetchAbortRef.current?.abort();
+    };
+  }, []);
 
-    try {
-      const response = await fetch("http://localhost:5000/api/email/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.requirement,
-        }),
-      });
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      fetchAbortRef.current?.abort();
+      const ac = new AbortController();
+      fetchAbortRef.current = ac;
+      setLoading(true);
+      setStatus("");
 
-      const data = await response.json();
+      try {
+        const response = await fetch("http://localhost:5000/api/email/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: ac.signal,
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            message: formData.requirement,
+          }),
+        });
 
-      if (data.success) {
-        setStatus("success: Message sent successfully!");
-        setFormData({ name: "", email: "", phone: "", location: "", requirement: "" });
-      } else {
-        setStatus("error: " + (data.error || "Failed to send message"));
+        const data = await response.json();
+
+        if (data.success) {
+          setStatus("success: Message sent successfully!");
+          setFormData({ name: "", email: "", phone: "", location: "", requirement: "" });
+        } else {
+          setStatus("error: " + (data.error || "Failed to send message"));
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+        setStatus("error: Cannot connect to server");
+      } finally {
+        setLoading(false);
       }
-    } catch (_error) {
-      setStatus("error: Cannot connect to server");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [formData]
+  );
 
   return (
     <section 
       id="contact"
       ref={ref}
-      className="relative py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-br from-slate-900 to-[#0A2540] overflow-hidden scroll-mt-24"
+      className="relative py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-br from-slate-900 to-[#0A2540] overflow-hidden scroll-mt-20"
     >
       {/* Background effects */}
       <div className="absolute inset-0">
-        <motion.div
+        <m.div
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.1, 0.2, 0.1],
@@ -66,7 +81,7 @@ export function ContactSection() {
           }}
           className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500 rounded-full blur-3xl"
         />
-        <motion.div
+        <m.div
           animate={{
             scale: [1.2, 1, 1.2],
             opacity: [0.1, 0.2, 0.1],
@@ -82,7 +97,7 @@ export function ContactSection() {
 
       <div className="container mx-auto max-w-6xl relative z-10">
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
@@ -97,18 +112,18 @@ export function ContactSection() {
           <p className="text-cyan-100/80 text-lg max-w-2xl mx-auto">
             Ready to experience premium hydration? Contact us for orders or distribution inquiries
           </p>
-        </motion.div>
+        </m.div>
 
         <div className="grid lg:grid-cols-2 gap-8 md:gap-12">
           {/* Contact Form - Glassmorphism */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: -50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8 }}
           >
             <div className="relative p-5 sm:p-8 rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl">
               {/* Glow effect */}
-              <motion.div
+              <m.div
                 animate={{
                   opacity: [0.3, 0.5, 0.3],
                 }}
@@ -180,7 +195,7 @@ export function ContactSection() {
                   />
                 </div>
 
-                <motion.button
+                <m.button
                   type="submit"
                   disabled={loading}
                   whileHover={{ scale: 1.02 }}
@@ -189,7 +204,7 @@ export function ContactSection() {
                 >
                   <Send className="w-5 h-5" />
                   {loading ? "Sending..." : "Send Message"}
-                </motion.button>
+                </m.button>
                 {status.startsWith("success") && (
                   <p className="text-sm text-green-400">✅ Message sent successfully!</p>
                 )}
@@ -198,10 +213,10 @@ export function ContactSection() {
                 )}
               </form>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Contact Info */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8 }}
@@ -230,7 +245,7 @@ export function ContactSection() {
             ].map((contact, i) => {
               const Icon = contact.icon;
               return (
-                <motion.div
+                <m.div
                   key={i}
                   initial={{ opacity: 0, y: 20 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -248,12 +263,12 @@ export function ContactSection() {
                       <p className="text-cyan-100/50 text-sm mt-1">{contact.subinfo}</p>
                     </div>
                   </div>
-                </motion.div>
+                </m.div>
               );
             })}
 
             {/* Quick links */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.6, duration: 0.6 }}
@@ -261,28 +276,28 @@ export function ContactSection() {
             >
               <h3 className="text-white font-semibold mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.02, x: 5 }}
                   className="w-full p-4 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all"
                 >
                   <MessageCircle className="w-5 h-5" />
                   WhatsApp Us
-                </motion.button>
+                </m.button>
                 
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.02, x: 5 }}
                   className="w-full p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
                 >
                   Download Brochure
-                </motion.button>
+                </m.button>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         </div>
       </div>
 
       {/* WhatsApp floating button */}
-      <motion.a
+      <m.a
         href="https://wa.me/919876543210"
         target="_blank"
         rel="noopener noreferrer"
@@ -296,7 +311,7 @@ export function ContactSection() {
         <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
         
         {/* Pulsing effect */}
-        <motion.div
+        <m.div
           animate={{
             scale: [1, 1.3, 1],
             opacity: [0.7, 0, 0.7],
@@ -312,7 +327,7 @@ export function ContactSection() {
         <div className="absolute right-full mr-3 px-3 py-2 bg-black/80 text-white text-sm rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           Chat with us on WhatsApp
         </div>
-      </motion.a>
+      </m.a>
     </section>
   );
 }

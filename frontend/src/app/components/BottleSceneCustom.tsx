@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useRef } from "react";
 import * as THREE from "three";
+import { destroyRendererAndScene } from "../utils/disposeThreeScene";
 
 interface BottleSceneCustomProps {
   labelBg: string[];
@@ -101,10 +102,17 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
   propsRef.current = props;
   const labelTextureRef = useRef<THREE.CanvasTexture | null>(null);
   const labelMaterialRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const glLiveRef = useRef(false);
 
   useEffect(() => {
     const container = mountRef.current;
     if (!container) return;
+
+    let destroyed = false;
+    let teardown: (() => void) | undefined;
+
+    const initTimeoutId = window.setTimeout(() => {
+      if (destroyed || !mountRef.current) return;
 
     const scene = new THREE.Scene();
     scene.background = null;
@@ -117,7 +125,7 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(W, H);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.3;
     container.appendChild(renderer.domElement);
@@ -155,7 +163,7 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
       [0.21, 3.1], [0.235, 3.15], [0.235, 3.26], [0.21, 3.3], [0.21, 3.4],
     ].map(([x, y]) => new THREE.Vector2(x, y));
 
-    const bottleGeo = new THREE.LatheGeometry(shape, 96);
+    const bottleGeo = new THREE.LatheGeometry(shape, 64);
     const glassMat = new THREE.MeshPhysicalMaterial({
       color: 0xb8ddf5,
       transparent: true,
@@ -178,7 +186,7 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
       [0.0, -0.06],
     ].map(([x, y]) => new THREE.Vector2(x, y));
 
-    const waterGeo = new THREE.LatheGeometry(waterShape, 96);
+    const waterGeo = new THREE.LatheGeometry(waterShape, 64);
     const waterMat = new THREE.MeshPhysicalMaterial({
       color: 0x2f9fd6,
       transparent: true,
@@ -193,7 +201,7 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
 
     const labelTex = buildLabelTexture(propsRef.current);
     labelTextureRef.current = labelTex;
-    const labelGeo = new THREE.CylinderGeometry(0.625, 0.625, 2.1, 96, 1, true);
+    const labelGeo = new THREE.CylinderGeometry(0.625, 0.625, 2.1, 64, 1, true);
     const labelMat = new THREE.MeshStandardMaterial({
       map: labelTex,
       roughness: 0.25,
@@ -253,7 +261,7 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
       ior: 1.33,
     });
     const rng = (s: number) => Math.abs(Math.sin(s * 127.1 + 311.7));
-    for (let i = 0; i < 38; i++) {
+    for (let i = 0; i < 20; i++) {
       const s = rng(i) * 0.042 + 0.012;
       const d = new THREE.Mesh(new THREE.SphereGeometry(s, 8, 8), dropMat);
       const a = rng(i + 50) * Math.PI * 2;
@@ -279,6 +287,7 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     let pointerDown = false;
     let previousX = 0;
     let animId = 0;
+    let isVisible = false;
     const clock = new THREE.Clock();
 
     const onPointerDown = (event: PointerEvent) => {
@@ -301,7 +310,8 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     window.addEventListener("pointerup", onPointerUp);
 
     const animate = () => {
-      animId = window.requestAnimationFrame(animate);
+      if (destroyed || !isVisible) return;
+      renderer.info.reset();
       const t = clock.getElapsedTime();
       if (propsRef.current.autoRotate ?? true) {
         targetRotation += 0.0026;
@@ -310,8 +320,29 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
       G.position.y = Math.sin(t * 0.7) * 0.08;
       dragVelocity *= 0.92;
       renderer.render(scene, camera);
+      animId = window.requestAnimationFrame(animate);
     };
-    animate();
+
+    const syncAnimationLoop = () => {
+      if (destroyed) return;
+      if (isVisible) {
+        if (animId === 0) animId = window.requestAnimationFrame(animate);
+      } else if (animId !== 0) {
+        window.cancelAnimationFrame(animId);
+        animId = 0;
+      }
+    };
+
+    const visibilityObserver = new IntersectionObserver(
+      (entries) => {
+        const next = entries[0]?.isIntersecting ?? false;
+        if (next === isVisible) return;
+        isVisible = next;
+        syncAnimationLoop();
+      },
+      { root: null, threshold: 0.01 }
+    );
+    visibilityObserver.observe(container);
 
     const onResize = () => {
       const w = container.clientWidth;
@@ -323,42 +354,30 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     };
     const observer = new ResizeObserver(onResize);
     observer.observe(container);
-    window.addEventListener("resize", onResize);
+    window.addEventListener("resize", onResize, { passive: true });
 
-    const disposeScene = () => {
-      scene.traverse((obj) => {
-        const mesh = obj as THREE.Mesh;
-        if (mesh.geometry) {
-          mesh.geometry.dispose();
-        }
-        const material = (mesh as THREE.Mesh).material;
-        if (Array.isArray(material)) {
-          material.forEach((mat) => {
-            const m = mat as THREE.Material & { map?: THREE.Texture | null };
-            if (m.map) m.map.dispose();
-            m.dispose();
-          });
-        } else if (material) {
-          const m = material as THREE.Material & { map?: THREE.Texture | null };
-          if (m.map) m.map.dispose();
-          m.dispose();
-        }
-      });
-    };
+    glLiveRef.current = true;
 
-    return () => {
-      window.cancelAnimationFrame(animId);
+    teardown = () => {
+      glLiveRef.current = false;
+      visibilityObserver.disconnect();
+      if (animId !== 0) window.cancelAnimationFrame(animId);
+      animId = 0;
       window.removeEventListener("resize", onResize);
       observer.disconnect();
       renderer.domElement.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
-      disposeScene();
-      renderer.dispose();
-      renderer.forceContextLoss();
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
+      destroyRendererAndScene(scene, renderer, container);
+      labelTextureRef.current = null;
+      labelMaterialRef.current = null;
+    };
+    }, 200);
+
+    return () => {
+      destroyed = true;
+      window.clearTimeout(initTimeoutId);
+      teardown?.();
     };
   }, []);
 
@@ -366,8 +385,10 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     const existingTexture = labelTextureRef.current;
     const existingMaterial = labelMaterialRef.current;
     if (!existingTexture || !existingMaterial) return;
+    if (!glLiveRef.current) return;
 
     const nextTexture = buildLabelTexture(props);
+    if (labelMaterialRef.current !== existingMaterial) return;
     existingMaterial.map = nextTexture;
     existingMaterial.needsUpdate = true;
     labelTextureRef.current = nextTexture;

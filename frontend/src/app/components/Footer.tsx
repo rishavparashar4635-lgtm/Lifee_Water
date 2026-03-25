@@ -1,4 +1,5 @@
-import { motion } from "motion/react";
+import { m } from "motion/react";
+import { Link } from "react-router";
 import { Facebook, Instagram, Twitter, Linkedin, Youtube } from "lucide-react";
 
 export function Footer() {
@@ -6,7 +7,7 @@ export function Footer() {
     <footer className="relative bg-gradient-to-br from-[#0A2540] to-slate-950 text-white pt-14 md:pt-16 pb-8 px-4 sm:px-6">
       {/* Wave divider */}
       <div className="absolute top-0 left-0 right-0 h-px">
-        <motion.div
+        <m.div
           animate={{
             backgroundPosition: ['0% 0%', '100% 0%'],
           }}
@@ -26,7 +27,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div className="space-y-4">
-            <motion.div
+            <m.div
               animate={{
                 filter: ['drop-shadow(0 0 10px rgba(14, 165, 233, 0.5))', 'drop-shadow(0 0 20px rgba(14, 165, 233, 0.8))', 'drop-shadow(0 0 10px rgba(14, 165, 233, 0.5))'],
               }}
@@ -41,7 +42,7 @@ export function Footer() {
                 <h3 className="text-2xl font-bold">LIFEE Water</h3>
                 <p className="text-cyan-400 text-sm">Purity Engineered</p>
               </div>
-            </motion.div>
+            </m.div>
             <p className="text-cyan-100/70 text-sm">
               Advanced purification technology delivering unmatched freshness and safety across Madhya Pradesh.
             </p>
@@ -55,7 +56,7 @@ export function Footer() {
                 { Icon: Linkedin, href: "https://linkedin.com" },
                 { Icon: Youtube, href: "https://youtube.com" },
               ].map(({ Icon, href }, i) => (
-                <motion.a
+                <m.a
                   key={i}
                   href={href}
                   target="_blank"
@@ -65,7 +66,7 @@ export function Footer() {
                   className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-white/20 hover:border-cyan-400 transition-all"
                 >
                   <Icon className="w-5 h-5 text-cyan-400" />
-                </motion.a>
+                </m.a>
               ))}
             </div>
           </div>
@@ -75,20 +76,20 @@ export function Footer() {
             <h4 className="text-lg font-semibold mb-4 text-white">Quick Links</h4>
             <ul className="space-y-2">
               {[
-                { label: "About Us", href: "#about" },
-                { label: "Products", href: "#products" },
-                { label: "Quality Process", href: "#process" },
-                { label: "Certifications", href: "#certifications" },
-                { label: "Distribution", href: "#distribution" },
+                { label: "About Us", to: "/#about" },
+                { label: "Products", to: "/#products" },
+                { label: "Quality Process", to: "/#process" },
+                { label: "Certifications", to: "/#certifications" },
+                { label: "Distribution", to: "/#distribution" },
               ].map((link, i) => (
                 <li key={i}>
-                  <motion.a
-                    href={link.href}
-                    whileHover={{ x: 5 }}
-                    className="text-cyan-100/70 hover:text-cyan-400 transition-colors text-sm"
+                  <Link
+                    to={link.to}
+                    prefetch="intent"
+                    className="text-cyan-100/70 hover:text-cyan-400 transition-colors text-sm inline-block hover:translate-x-1 duration-200"
                   >
                     {link.label}
-                  </motion.a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -106,13 +107,13 @@ export function Footer() {
                 { label: "Customer Support", href: "#contact" },
               ].map((service, i) => (
                 <li key={i}>
-                  <motion.a
+                  <m.a
                     href={service.href}
                     whileHover={{ x: 5 }}
                     className="text-cyan-100/70 hover:text-cyan-400 transition-colors text-sm"
                   >
                     {service.label}
-                  </motion.a>
+                  </m.a>
                 </li>
               ))}
             </ul>
@@ -154,18 +155,18 @@ export function Footer() {
             </p>
             <div className="flex gap-6">
               {[
-                { label: "Privacy Policy", href: "#contact" },
-                { label: "Terms of Service", href: "#contact" },
-                { label: "Refund Policy", href: "#contact" },
+                { label: "Privacy Policy", to: "/#contact" },
+                { label: "Terms of Service", to: "/#contact" },
+                { label: "Refund Policy", to: "/#contact" },
               ].map((link, i) => (
-                <motion.a
+                <Link
                   key={i}
-                  href={link.href}
-                  whileHover={{ scale: 1.05 }}
-                  className="text-cyan-100/60 hover:text-cyan-400 text-sm transition-colors"
+                  to={link.to}
+                  prefetch="intent"
+                  className="text-cyan-100/60 hover:text-cyan-400 text-sm transition-colors hover:scale-105 inline-block duration-200"
                 >
                   {link.label}
-                </motion.a>
+                </Link>
               ))}
             </div>
           </div>
