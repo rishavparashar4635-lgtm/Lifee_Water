@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import { Upload } from "lucide-react";
 
 type LabelFinish = "matte" | "glossy";
@@ -8,7 +9,7 @@ interface CustomizeOrderFormProps {
   subtitle: string;
 }
 
-export function CustomizeOrderForm({ title, subtitle }: CustomizeOrderFormProps) {
+function CustomizeOrderFormInner({ title, subtitle }: CustomizeOrderFormProps) {
   const [customData, setCustomData] = useState({
     image: "",
     name: "",
@@ -22,66 +23,81 @@ export function CustomizeOrderForm({ title, subtitle }: CustomizeOrderFormProps)
   });
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
+  const fetchAbortRef = useRef<AbortController | null>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    return () => {
+      fetchAbortRef.current?.abort();
+    };
+  }, []);
+
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => setCustomData((prev) => ({ ...prev, image: reader.result as string }));
     reader.readAsDataURL(file);
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setStatus("");
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      fetchAbortRef.current?.abort();
+      const ac = new AbortController();
+      fetchAbortRef.current = ac;
+      setLoading(true);
+      setStatus("");
 
-    try {
-      const response = await fetch("http://localhost:5000/api/email/custom-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: customData.name,
-          email: customData.email,
-          phone: customData.phone,
-          orderType: title,
-          quantity: customData.quantity,
-          eventDate: customData.eventDate,
-          customMessage: customData.message,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setStatus("success: Custom order sent successfully!");
-        setCustomData({
-          image: "",
-          name: "",
-          email: "",
-          phone: "",
-          eventDate: "",
-          message: "",
-          finish: "glossy",
-          quantity: 50,
-          location: "",
+      try {
+        const response = await fetch("http://localhost:5000/api/email/custom-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: ac.signal,
+          body: JSON.stringify({
+            name: customData.name,
+            email: customData.email,
+            phone: customData.phone,
+            orderType: title,
+            quantity: customData.quantity,
+            eventDate: customData.eventDate,
+            customMessage: customData.message,
+          }),
         });
-      } else {
-        setStatus("error: " + (data.error || "Failed to send custom order"));
+
+        const data = await response.json();
+
+        if (data.success) {
+          setStatus("success: Custom order sent successfully!");
+          setCustomData({
+            image: "",
+            name: "",
+            email: "",
+            phone: "",
+            eventDate: "",
+            message: "",
+            finish: "glossy",
+            quantity: 50,
+            location: "",
+          });
+        } else {
+          setStatus("error: " + (data.error || "Failed to send custom order"));
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+        setStatus("error: Cannot connect to server");
+      } finally {
+        setLoading(false);
       }
-    } catch (_error) {
-      setStatus("error: Cannot connect to server");
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [customData, title]
+  );
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-900 to-[#0A2540] px-4 sm:px-6 py-10">
       <div className="max-w-4xl mx-auto">
-        <a href="/" className="inline-flex items-center text-cyan-300 hover:text-cyan-200 mb-8">
+        <Link to="/" prefetch="intent" className="inline-flex items-center text-cyan-300 hover:text-cyan-200 mb-8">
           ← Back
-        </a>
+        </Link>
         <div className="text-center mb-10">
           <h1 className="text-3xl md:text-4xl font-bold text-white">{title}</h1>
           <p className="text-cyan-100/80 mt-3">{subtitle}</p>
@@ -100,7 +116,17 @@ export function CustomizeOrderForm({ title, subtitle }: CustomizeOrderFormProps)
                 <span className="text-white">{customData.image ? "Change Image" : "Upload High-Res Photo"}</span>
               </label>
             </div>
-            {customData.image && <img src={customData.image} alt="Preview" className="w-24 h-24 object-cover rounded-lg" />}
+            {customData.image && (
+              <img
+                src={customData.image}
+                alt="Preview"
+                width={96}
+                height={96}
+                loading="lazy"
+                decoding="async"
+                className="w-24 h-24 object-cover rounded-lg"
+              />
+            )}
           </div>
 
           <div className="space-y-3">
@@ -224,3 +250,5 @@ export function CustomizeOrderForm({ title, subtitle }: CustomizeOrderFormProps)
     </main>
   );
 }
+
+export const CustomizeOrderForm = memo(CustomizeOrderFormInner);

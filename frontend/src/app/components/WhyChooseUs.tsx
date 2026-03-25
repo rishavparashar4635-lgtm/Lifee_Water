@@ -1,4 +1,4 @@
-import { motion, useInView } from "motion/react";
+import { m, useInView } from "motion/react";
 import { useRef } from "react";
 import { Cpu, Package, Truck, DollarSign, Heart } from "lucide-react";
 
@@ -42,7 +42,7 @@ export function WhyChooseUs() {
     >
       <div className="container mx-auto max-w-7xl relative z-10">
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
@@ -57,14 +57,14 @@ export function WhyChooseUs() {
           <p className="text-cyan-100/80 text-lg max-w-2xl mx-auto">
             Experience the difference of truly premium water with technology-driven quality
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Reasons grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {reasons.map((reason, index) => {
             const Icon = reason.icon;
             return (
-              <motion.div
+              <m.div
                 key={index}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={isInView ? { opacity: 1, scale: 1 } : {}}
@@ -74,13 +74,13 @@ export function WhyChooseUs() {
               >
                 <div className="relative p-6 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg border border-white/10 shadow-xl h-full">
                   {/* Soft glow on hover */}
-                  <motion.div
+                  <m.div
                     className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/10 group-hover:to-blue-500/10 rounded-2xl transition-all duration-500"
                   />
 
                   <div className="relative z-10 flex flex-col items-center text-center space-y-4">
                     {/* Icon */}
-                    <motion.div
+                    <m.div
                       whileHover={{ rotate: [0, -10, 10, 0] }}
                       transition={{ duration: 0.5 }}
                       className="relative"
@@ -90,7 +90,7 @@ export function WhyChooseUs() {
                       </div>
                       
                       {/* Glow */}
-                      <motion.div
+                      <m.div
                         animate={{
                           opacity: [0, 0.6, 0],
                           scale: [0.8, 1.2, 0.8],
@@ -102,7 +102,7 @@ export function WhyChooseUs() {
                         }}
                         className="absolute inset-0 bg-cyan-400 rounded-2xl blur-xl opacity-0 group-hover:opacity-30"
                       />
-                    </motion.div>
+                    </m.div>
 
                     {/* Text */}
                     <div className="space-y-2">
@@ -118,7 +118,7 @@ export function WhyChooseUs() {
                   {/* Border glow on hover */}
                   <div className="absolute inset-0 rounded-2xl border border-cyan-500/0 group-hover:border-cyan-500/30 transition-all duration-500" />
                 </div>
-              </motion.div>
+              </m.div>
             );
           })}
         </div>

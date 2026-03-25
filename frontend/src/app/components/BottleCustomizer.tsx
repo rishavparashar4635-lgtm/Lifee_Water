@@ -1,5 +1,5 @@
-import { motion, useInView } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { m, useInView } from "motion/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Upload, Building2, Cake, Heart } from "lucide-react";
 import BottleSceneCustom from "./BottleSceneCustom";
 
@@ -74,16 +74,15 @@ export function BottleCustomizer() {
     subText: "Corporate Edition",
     bottomText: "PREMIUM WATER",
   });
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCustomData({ ...customData, image: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCustomData((prev) => ({ ...prev, image: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
+  }, []);
 
   const currentOccasion = selectedOccasion ? occasions.find((o) => o.id === selectedOccasion) : null;
   const targetPreviewLabel = useMemo(
@@ -102,10 +101,10 @@ export function BottleCustomizer() {
     return () => window.clearTimeout(timeoutId);
   }, [targetPreviewLabel]);
 
-  const handleSelectOccasion = (occasionId: OccasionType) => {
+  const handleSelectOccasion = useCallback((occasionId: OccasionType) => {
     setSelectedOccasion(occasionId);
     setPreviewRotationEnabled(false);
-  };
+  }, []);
 
   return (
     <section
@@ -124,7 +123,7 @@ export function BottleCustomizer() {
       </div>
 
       <div className="container mx-auto max-w-7xl relative z-10">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
@@ -136,14 +135,14 @@ export function BottleCustomizer() {
           <p className="text-cyan-100/80 text-lg max-w-2xl mx-auto">
             Personalize premium water bottles with precision-designed labels for your special moments.
           </p>
-        </motion.div>
+        </m.div>
 
         {!selectedOccasion ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {occasions.map((occasion, index) => {
               const Icon = occasion.icon;
               return (
-                <motion.div
+                <m.div
                   key={occasion.id}
                   initial={{ opacity: 0, y: 50 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -152,27 +151,18 @@ export function BottleCustomizer() {
                   className="group cursor-pointer"
                 >
                   <div className="relative h-full rounded-3xl overflow-hidden bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-lg border border-white/10 hover:border-white/30 transition-all duration-500">
-                    <div className="relative h-80 overflow-hidden">
-                      <motion.img
+                    <div className="w-full h-[280px] rounded-t-2xl overflow-hidden relative">
+                      <m.img
                         src={occasion.backgroundImage}
                         alt={`${occasion.title} scene`}
+                        width={1080}
+                        height={720}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                         whileHover={{ scale: 1.05 }}
                         transition={{ duration: 0.6 }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/70 to-slate-900/30" />
-
-                      <div className="absolute left-4 right-4 bottom-4">
-                        <motion.div whileHover={{ scale: 1.03, y: -6 }} transition={{ duration: 0.35 }} className="relative w-full h-[320px]">
-                          <BottleSceneCustom
-                            labelBg={occasion.labelBg}
-                            nameText={occasion.labelText}
-                            subText={occasion.labelSubtext}
-                            accentColor={occasion.accentColor}
-                            bottomText={occasion.bottomText}
-                          />
-                        </motion.div>
-                      </div>
                     </div>
 
                     <div className="p-6 space-y-4">
@@ -188,7 +178,7 @@ export function BottleCustomizer() {
 
                       <p className="text-cyan-100/70 text-sm">{occasion.description}</p>
 
-                      <motion.button
+                      <m.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 mt-4"
@@ -198,20 +188,20 @@ export function BottleCustomizer() {
                         }}
                       >
                         Customize Now
-                      </motion.button>
+                      </m.button>
                     </div>
 
-                    <motion.div
+                    <m.div
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
                       style={{ background: `radial-gradient(circle at 50% 50%, ${occasion.colors.primary}20, transparent 70%)` }}
                     />
                   </div>
-                </motion.div>
+                </m.div>
               );
             })}
           </div>
         ) : (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
+          <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }}>
             <div className="grid lg:grid-cols-2 gap-8 md:gap-12">
               <div className="relative">
                 <div className="sticky top-8">
@@ -240,9 +230,9 @@ export function BottleCustomizer() {
               </div>
 
               <div className="space-y-6">
-                <motion.button onClick={() => setSelectedOccasion(null)} whileHover={{ x: -5 }} className="text-cyan-400 hover:text-cyan-300 flex items-center gap-2 mb-4">
+                <m.button onClick={() => setSelectedOccasion(null)} whileHover={{ x: -5 }} className="text-cyan-400 hover:text-cyan-300 flex items-center gap-2 mb-4">
                   ← Back to occasions
-                </motion.button>
+                </m.button>
 
                 <div className="p-5 sm:p-8 rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 space-y-6">
                   <div className="space-y-3">
@@ -257,7 +247,17 @@ export function BottleCustomizer() {
                         <span className="text-white">{customData.image ? "Change Image" : "Upload High-Res Photo"}</span>
                       </label>
                     </div>
-                    {customData.image && <img src={customData.image} alt="Preview" className="w-24 h-24 object-cover rounded-lg" />}
+                    {customData.image && (
+                      <img
+                        src={customData.image}
+                        alt="Preview"
+                        width={96}
+                        height={96}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-24 h-24 object-cover rounded-lg"
+                      />
+                    )}
                   </div>
 
                   <div className="space-y-3">
@@ -296,7 +296,7 @@ export function BottleCustomizer() {
                     <label className="text-white font-semibold">Label Finish</label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {(["matte", "glossy"] as const).map((finish) => (
-                        <motion.button
+                        <m.button
                           key={finish}
                           onClick={() => setCustomData({ ...customData, finish })}
                           whileHover={{ scale: 1.02 }}
@@ -307,7 +307,7 @@ export function BottleCustomizer() {
                         >
                           <div className="text-white font-semibold capitalize">{finish}</div>
                           <div className="text-xs text-cyan-100/60 mt-1">{finish === "matte" ? "Soft, elegant look" : "Shiny, premium feel"}</div>
-                        </motion.button>
+                        </m.button>
                       ))}
                     </div>
                   </div>
@@ -340,7 +340,7 @@ export function BottleCustomizer() {
                   </div>
 
                   <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
-                    <motion.button
+                    <m.button
                       type="button"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -352,19 +352,19 @@ export function BottleCustomizer() {
                       }`}
                     >
                       {previewRotationEnabled ? "Bottle Preview On" : "Bottle Preview"}
-                    </motion.button>
-                    <motion.button
+                    </m.button>
+                    <m.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="w-full max-w-[300px] py-4 px-6 text-center rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all"
                     >
                       Request Custom Order
-                    </motion.button>
+                    </m.button>
                   </div>
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </div>
     </section>

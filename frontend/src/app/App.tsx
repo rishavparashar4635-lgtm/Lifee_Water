@@ -1,29 +1,19 @@
-import { HeroSection } from "./components/HeroSection";
-import { AboutSection } from "./components/AboutSection";
-import { PurificationProcess } from "./components/PurificationProcess";
-import { ProductShowcase } from "./components/ProductShowcase";
-import { QualityCertification } from "./components/QualityCertification";
-import { WhyChooseUs } from "./components/WhyChooseUs";
-import { DistributionSection } from "./components/DistributionSection";
-import { BottleCustomizer } from "./components/BottleCustomizer";
-import { ContactSection } from "./components/ContactSection";
-import { Footer } from "./components/Footer";
-import { Navbar } from "./components/Navbar";
+import { lazy, Suspense } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+
+const HomePage = lazy(() => import("./pages/HomePage"));
+const CustomizeOrderPage = lazy(() => import("./pages/CustomizeOrderPage"));
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
-      <Navbar />
-      <HeroSection />
-      <AboutSection />
-      <PurificationProcess />
-      <ProductShowcase />
-      <QualityCertification />
-      <WhyChooseUs />
-      <BottleCustomizer />
-      <DistributionSection />
-      <ContactSection />
-      <Footer />
-    </div>
+    <Suspense fallback={<div className="min-h-screen bg-slate-900" aria-hidden />}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/customize" element={<CustomizeOrderPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </Suspense>
   );
 }

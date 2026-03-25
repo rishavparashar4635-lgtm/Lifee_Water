@@ -1,27 +1,57 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Home, Info, Cog, Package, Phone, Menu, X } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { Link, useLocation, useNavigate } from "react-router";
+import { m, AnimatePresence } from "motion/react";
+import { throttle } from "../utils/throttle";
 
 const navItems = [
-  { label: "Home", href: "#home", icon: Home },
-  { label: "About", href: "#about", icon: Info },
-  { label: "Process", href: "#process", icon: Cog },
-  { label: "Products", href: "#products", icon: Package },
-  { label: "Contact", href: "#contact", icon: Phone },
-];
+  { label: "Home", id: "home", icon: Home },
+  { label: "About", id: "about", icon: Info },
+  { label: "Process", id: "process", icon: Cog },
+  { label: "Products", id: "products", icon: Package },
+  { label: "Contact", id: "contact", icon: Phone },
+] as const;
+
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
 
 export function Navbar() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setIsScrolled(window.scrollY > 10);
+    const onScroll = throttle(() => setIsScrolled(window.scrollY > 10), 100);
     onScroll();
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const closeMenu = () => setIsOpen(false);
+  const closeMenu = useCallback(() => setIsOpen(false), []);
+
+  const handleSectionNav = useCallback(
+    (id: string) => {
+      if (location.pathname !== "/") {
+        navigate(`/#${id}`);
+      } else {
+        scrollToSection(id);
+      }
+    },
+    [location.pathname, navigate]
+  );
+
+  const onNavItemClick = useCallback(
+    (id: string) => {
+      closeMenu();
+      handleSectionNav(id);
+    },
+    [closeMenu, handleSectionNav]
+  );
 
   return (
     <header
@@ -31,25 +61,26 @@ export function Navbar() {
     >
       <div className="container mx-auto max-w-7xl px-4 sm:px-6">
         <div className="h-20 flex items-center justify-between gap-4">
-          <a href="#home" className="flex items-center gap-2 text-white min-h-11">
+          <Link to="/" prefetch="intent" className="flex items-center gap-2 text-white min-h-11">
             <span className="text-2xl" aria-hidden="true">
               💧
             </span>
             <span className="text-lg sm:text-xl font-bold tracking-wide">LIFEE</span>
-          </a>
+          </Link>
 
           <nav className="hidden md:flex items-center gap-8">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className="text-cyan-100/90 hover:text-cyan-300 transition-colors text-sm font-medium inline-flex items-center gap-2"
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleSectionNav(item.id)}
+                  className="text-cyan-100/90 hover:text-cyan-300 transition-colors text-sm font-medium inline-flex items-center gap-2 bg-transparent border-0 cursor-pointer p-0 font-inherit"
                 >
                   <Icon className="w-4 h-4" />
                   {item.label}
-                </a>
+                </button>
               );
             })}
           </nav>
@@ -69,7 +100,7 @@ export function Navbar() {
 
       <AnimatePresence>
         {isOpen && (
-          <motion.nav
+          <m.nav
             id="mobile-nav"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -81,19 +112,19 @@ export function Navbar() {
               {navItems.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    onClick={closeMenu}
-                    className="min-h-11 w-full flex items-center gap-2 px-2 py-3 text-cyan-100/90 hover:text-cyan-300 hover:bg-white/5 rounded-md transition-all"
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onNavItemClick(item.id)}
+                    className="min-h-11 w-full flex items-center gap-2 px-2 py-3 text-cyan-100/90 hover:text-cyan-300 hover:bg-white/5 rounded-md transition-all bg-transparent border-0 cursor-pointer text-left font-inherit"
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
-                  </a>
+                  </button>
                 );
               })}
             </div>
-          </motion.nav>
+          </m.nav>
         )}
       </AnimatePresence>
     </header>

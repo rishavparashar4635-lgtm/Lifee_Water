@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
@@ -25,6 +26,20 @@ try {
     console.error("❌ Error loading email routes:", err);
 }
 
+app.use(compression());
+
+// Response timing + cache headers for GETs
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        console.log(`${req.method} ${req.path} ${Date.now() - start}ms`);
+    });
+    if (req.method === 'GET') {
+        res.set('Cache-Control', 'public, max-age=300');
+    }
+    next();
+});
+
 // Security middleware
 app.use(helmet());
 
@@ -43,6 +58,7 @@ app.use(
     cors({
         origin: [
             'http://localhost:3000',
+            'http://localhost:5173',
             /^http:\/\/localhost:\d+$/,
             /^http:\/\/127\.0\.0\.1:\d+$/,
         ],
@@ -89,8 +105,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 LIFEE Backend running on http://localhost:${PORT}`);
 });
-
-// 🧪 Keep process alive (for debugging)
-setInterval(() => {
-    console.log("🟢 Server still running...");
-}, 10000);
