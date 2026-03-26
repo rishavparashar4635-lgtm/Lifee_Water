@@ -302,17 +302,7 @@ export function DistributionSection() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <m.button
-                      type="submit"
-                      disabled={loading}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {loading ? "Sending..." : "Submit Request"}
-                    </m.button>
-
-                    <m.button
+                     <m.button
                       type="button"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -324,6 +314,17 @@ export function DistributionSection() {
                     >
                       Cancel
                     </m.button>
+                    <m.button
+                      type="submit"
+                      disabled={loading}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {loading ? "Sending..." : "Submit Request"}
+                    </m.button>
+
+                   
                   </div>
                 </form>
               </m.div>
