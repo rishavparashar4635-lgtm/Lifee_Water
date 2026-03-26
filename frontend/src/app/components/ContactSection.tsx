@@ -1,6 +1,10 @@
 import { m, useInView } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Send, Phone, Mail, MapPin, MessageCircle } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+
+const STATUS_HIDE_MS = 10000;
+const REQUEST_TIMEOUT_MS = 12000;
 
 export function ContactSection() {
   const ref = useRef(null);
@@ -15,12 +19,26 @@ export function ContactSection() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const fetchAbortRef = useRef<AbortController | null>(null);
+  const statusTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
       fetchAbortRef.current?.abort();
+      if (statusTimeoutRef.current) {
+        window.clearTimeout(statusTimeoutRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (!status) return;
+    if (statusTimeoutRef.current) {
+      window.clearTimeout(statusTimeoutRef.current);
+    }
+    statusTimeoutRef.current = window.setTimeout(() => {
+      setStatus("");
+    }, STATUS_HIDE_MS);
+  }, [status]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -30,6 +48,11 @@ export function ContactSection() {
       fetchAbortRef.current = ac;
       setLoading(true);
       setStatus("");
+      let didTimeout = false;
+      const requestTimeout = window.setTimeout(() => {
+        didTimeout = true;
+        ac.abort();
+      }, REQUEST_TIMEOUT_MS);
 
       try {
         const response = await fetch("http://localhost:5000/api/email/contact", {
@@ -40,6 +63,7 @@ export function ContactSection() {
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
+            location: formData.location,
             message: formData.requirement,
           }),
         });
@@ -53,9 +77,14 @@ export function ContactSection() {
           setStatus("error: " + (data.error || "Failed to send message"));
         }
       } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") return;
+        if (error instanceof Error && error.name === "AbortError" && !didTimeout) return;
+        if (didTimeout) {
+          setStatus("error: Request timed out. Please try again.");
+          return;
+        }
         setStatus("error: Cannot connect to server");
       } finally {
+        window.clearTimeout(requestTimeout);
         setLoading(false);
       }
     },
@@ -66,7 +95,7 @@ export function ContactSection() {
     <section 
       id="contact"
       ref={ref}
-      className="relative py-20 md:py-24 px-4 sm:px-6 bg-gradient-to-br from-slate-900 to-[#0A2540] overflow-hidden scroll-mt-20"
+      className="relative py-16 px-4 sm:px-6 bg-gradient-to-br from-slate-900 to-[#0A2540] overflow-hidden scroll-mt-20"
     >
       {/* Background effects */}
       <div className="absolute inset-0">
@@ -95,7 +124,7 @@ export function ContactSection() {
         />
       </div>
 
-      <div className="container mx-auto max-w-6xl relative z-10">
+      <div className="container mx-auto max-w-6xl relative z-10 section-container">
         {/* Header */}
         <m.div
           initial={{ opacity: 0, y: 30 }}
@@ -114,14 +143,31 @@ export function ContactSection() {
           </p>
         </m.div>
 
-        <div className="grid lg:grid-cols-2 gap-8 md:gap-12">
+        <div
+          className="contact-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "48px",
+            maxWidth: "1100px",
+            margin: "0 auto",
+            padding: "0 24px",
+          }}
+        >
           {/* Contact Form - Glassmorphism */}
           <m.div
             initial={{ opacity: 0, x: -50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8 }}
           >
-            <div className="relative p-5 sm:p-8 rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl">
+            <div
+              style={{
+                maxWidth: "560px",
+                width: "100%",
+                margin: "0 auto",
+              }}
+            >
+              <div className="relative p-5 sm:p-8 rounded-3xl bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl">
               {/* Glow effect */}
               <m.div
                 animate={{
@@ -142,7 +188,7 @@ export function ContactSection() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Enter your name"
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-all"
                     required
                   />
                 </div>
@@ -154,7 +200,7 @@ export function ContactSection() {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="Enter your phone number"
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-all"
                     required
                   />
                 </div>
@@ -166,7 +212,7 @@ export function ContactSection() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="Enter your email"
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-all"
                     required
                   />
                 </div>
@@ -178,7 +224,7 @@ export function ContactSection() {
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     placeholder="Your city in Madhya Pradesh"
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-all"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-all"
                     required
                   />
                 </div>
@@ -190,7 +236,7 @@ export function ContactSection() {
                     onChange={(e) => setFormData({ ...formData, requirement: e.target.value })}
                     placeholder="Tell us about your requirement (order quantity, distribution inquiry, etc.)"
                     rows={4}
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-all resize-none"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-cyan-400 transition-all resize-none"
                     required
                   />
                 </div>
@@ -212,6 +258,7 @@ export function ContactSection() {
                   <p className="text-sm text-red-400">❌ {status.replace(/^error:\s*/i, "")}</p>
                 )}
               </form>
+              </div>
             </div>
           </m.div>
 
@@ -280,7 +327,7 @@ export function ContactSection() {
                   whileHover={{ scale: 1.02, x: 5 }}
                   className="w-full p-4 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all"
                 >
-                  <MessageCircle className="w-5 h-5" />
+                  <FaWhatsapp size={20} color="#FFFFFF" />
                   WhatsApp Us
                 </m.button>
                 
@@ -308,7 +355,7 @@ export function ContactSection() {
         whileTap={{ scale: 0.9 }}
         className="fixed bottom-5 right-4 sm:bottom-8 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-2xl shadow-green-500/50 hover:shadow-green-500/70 transition-all z-30 group"
       >
-        <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+        <FaWhatsapp className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
         
         {/* Pulsing effect */}
         <m.div
