@@ -63,7 +63,7 @@ function BottleScene() {
 
       /* ── Group ── */
       const G = new THREE.Group();
-      G.scale.set(1.6, 1, 1.6);
+      G.scale.set(1.9, 1, 1.9);
       scene.add(G);
 
       /* ── Bottle Shape ── */
@@ -99,14 +99,14 @@ function BottleScene() {
       const glassMat = new THREE.MeshPhysicalMaterial({
         color: 0xb8ddf5,
         transparent: true,
-        opacity: 0.32,
+        opacity: 0.5,
         roughness: 0.03,
-        metalness: 0.0,
+        metalness: 0.6,
         transmission: 0.88,
-        thickness: 0.4,
-        ior: 1.49,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.02,
+        thickness: 0.2,
+        ior: 1.4,
+        clearcoat: 0.8,
+        clearcoatRoughness: 0.05,
         side: THREE.DoubleSide,
       });
       G.add(new THREE.Mesh(bottleGeo, glassMat));
@@ -131,7 +131,7 @@ function BottleScene() {
         [0.0, -0.06],
       ].map(([x, y]) => new THREE.Vector2(x, y));
 
-      const waterGeo = new THREE.LatheGeometry(waterShape, 64);
+      const waterGeo = new THREE.LatheGeometry(waterShape, 50);
       const waterMat = new THREE.MeshPhysicalMaterial({
         color: 0x2f9fd6,
         transparent: true,
@@ -151,40 +151,40 @@ function BottleScene() {
       const ctx = lc.getContext("2d");
       if (ctx) {
         const lg = ctx.createLinearGradient(0, 0, 1024, 0);
-        lg.addColorStop(0, "#3a9ac8");
-        lg.addColorStop(0.25, "#5bbfea");
-        lg.addColorStop(0.5, "#70cef5");
-        lg.addColorStop(0.75, "#5bbfea");
-        lg.addColorStop(1, "#3a9ac8");
+        lg.addColorStop(0, "#0f435b");
+        lg.addColorStop(0.25, "#144960");
+        lg.addColorStop(0.5, "#1e6989");
+        lg.addColorStop(0.75, "#1b6585");
+        lg.addColorStop(1, "#1d6181");
         ctx.fillStyle = lg;
         ctx.fillRect(0, 0, 1024, 640);
 
         const th = ctx.createLinearGradient(0, 0, 0, 200);
-        th.addColorStop(0, "rgba(255,255,255,0.25)");
-        th.addColorStop(1, "rgba(255,255,255,0)");
+        th.addColorStop(0, "rgba(95, 14, 14, 0.25)");
+        th.addColorStop(1, "rgba(94, 25, 25, 0)");
         ctx.fillStyle = th;
         ctx.fillRect(0, 0, 1024, 200);
 
         ctx.textAlign = "center";
-        ctx.fillStyle = "#0b2a45";
+        ctx.fillStyle = "#01192d";
         ctx.font = "bold 155px Arial, sans-serif";
-        ctx.shadowColor = "rgba(255,255,255,0.25)";
+        ctx.shadowColor = "rgba(93, 24, 24, 0.25)";
         ctx.shadowBlur = 6;
         ctx.fillText("LIFEE", 512, 195);
         ctx.shadowBlur = 0;
 
         ctx.font = "300 42px Arial, sans-serif";
-        ctx.fillStyle = "rgba(11,42,69,0.9)";
+        ctx.fillStyle = "rgba(1, 20, 37, 0.9)";
         ctx.fillText("PREMIUM WATER", 512, 258);
 
-        ctx.strokeStyle = "rgba(255,255,255,0.55)";
+        ctx.strokeStyle = "rgba(130, 46, 46, 0.55)";
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(170, 284);
         ctx.lineTo(854, 284);
         ctx.stroke();
 
-        ctx.fillStyle = "#0b2a45";
+        ctx.fillStyle = "#032039";
         ctx.font = "bold 140px Arial, sans-serif";
         ctx.fillText("1L", 512, 420);
 
@@ -194,7 +194,7 @@ function BottleScene() {
         ctx.stroke();
 
         ctx.font = "300 38px Arial, sans-serif";
-        ctx.fillStyle = "rgba(11,42,69,0.9)";
+        ctx.fillStyle = "rgba(2, 25, 46, 0.9)";
         ctx.fillText("PURE & NATURAL", 512, 528);
 
         const labelTex = new THREE.CanvasTexture(lc);
@@ -212,11 +212,11 @@ function BottleScene() {
       /* ── Cap ── */
       const capMat = new THREE.MeshPhysicalMaterial({
         color: 0x18263f,
-        roughness: 0.3,
-        metalness: 0.15,
-        clearcoat: 0.9,
+        roughness: 0.7,
+        metalness: 0.1,
+        clearcoat: 0.6,
       });
-      const ridgeMat = new THREE.MeshStandardMaterial({ color: 0x243560, roughness: 0.5 });
+      const ridgeMat = new THREE.MeshStandardMaterial({ color: 0x243560, roughness: 0.6 });
       const capGroup = new THREE.Group();
       capGroup.add(
         Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.44, 64), capMat))
@@ -235,35 +235,35 @@ function BottleScene() {
       G.add(capGroup);
 
       /* ── Specular highlight strips ── */
-      const hlMat = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-        opacity: 0.1,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-      });
-      const hl1 = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 7.6), hlMat);
-      hl1.position.set(0.5, 0.1, 0.37);
-      hl1.rotation.y = -0.65;
-      G.add(hl1);
-      const hl2 = new THREE.Mesh(new THREE.PlaneGeometry(0.025, 7.6), hlMat);
-      hl2.position.set(0.42, 0.1, 0.46);
-      hl2.rotation.y = -0.55;
-      G.add(hl2);
+      // const hlMat = new THREE.MeshBasicMaterial({
+      //   color: 0xffffff,
+      //   transparent: true,
+      //   opacity: 0.1,
+      //   side: THREE.DoubleSide,
+      //   depthWrite: false,
+      // });
+      // const hl1 = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 7.6), hlMat);
+      // hl1.position.set(0.5, 0.1, 0.37);
+      // hl1.rotation.y = -0.65;
+      // G.add(hl1);
+      // const hl2 = new THREE.Mesh(new THREE.PlaneGeometry(0.025, 7.6), hlMat);
+      // hl2.position.set(0.42, 0.1, 0.46);
+      // hl2.rotation.y = -0.55;
+      // G.add(hl2);
 
       /* ── Water droplets ── */
       const dropMat = new THREE.MeshPhysicalMaterial({
         color: 0x88ccee,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.1,
         roughness: 0.0,
-        transmission: 0.55,
+        transmission: 0.4,
         ior: 1.33,
       });
       const rng = (s: number) => Math.abs(Math.sin(s * 127.1 + 311.7));
       for (let i = 0; i < 20; i++) {
         const s = rng(i) * 0.042 + 0.012;
-        const d = new THREE.Mesh(new THREE.SphereGeometry(s, 8, 8), dropMat);
+        const d = new THREE.Mesh(new THREE.SphereGeometry(s, 5, 8), dropMat);
         const a = rng(i + 50) * Math.PI * 2;
         d.position.set(Math.cos(a) * 0.635, (rng(i + 100) - 0.5) * 7.0, Math.sin(a) * 0.635);
         G.add(d);
