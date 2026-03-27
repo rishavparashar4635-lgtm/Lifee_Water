@@ -1,6 +1,11 @@
 import React, { memo, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { destroyRendererAndScene } from "../utils/disposeThreeScene";
+import {
+  getBottleQualityConfig,
+  getBottleRotationFollowSharpness,
+  getBottleRotationRadPerSec,
+} from "../utils/devicePerformance";
 
 interface BottleSceneCustomProps {
   labelBg: string[];
@@ -11,16 +16,20 @@ interface BottleSceneCustomProps {
   autoRotate?: boolean;
 }
 
-function buildLabelTexture({
-  labelBg,
-  nameText,
-  subText,
-  accentColor,
-  bottomText,
-}: BottleSceneCustomProps): THREE.CanvasTexture {
+function buildLabelTexture(
+  {
+    labelBg,
+    nameText,
+    subText,
+    accentColor,
+    bottomText,
+  }: BottleSceneCustomProps,
+  canvasW = 1024,
+  canvasH = 640
+): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 640;
+  canvas.width = canvasW;
+  canvas.height = canvasH;
   const ctx = canvas.getContext("2d");
 
   if (!ctx) {
@@ -28,6 +37,9 @@ function buildLabelTexture({
     fallback.needsUpdate = true;
     return fallback;
   }
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(canvasW / 1024, canvasH / 640);
 
   const fitName = (value: string) => {
     const trimmed = value.trim();
@@ -102,6 +114,7 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
   propsRef.current = props;
   const labelTextureRef = useRef<THREE.CanvasTexture | null>(null);
   const labelMaterialRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const labelCanvasSizeRef = useRef({ w: 1024, h: 640 });
   const glLiveRef = useRef(false);
 
   useEffect(() => {
@@ -114,6 +127,9 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     const initTimeoutId = window.setTimeout(() => {
       if (destroyed || !mountRef.current) return;
 
+    const q = getBottleQualityConfig();
+    labelCanvasSizeRef.current = { w: q.labelCanvasW, h: q.labelCanvasH };
+
     const scene = new THREE.Scene();
     scene.background = null;
 
@@ -123,9 +139,16 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     camera.position.set(0, -0.3, 9);
     camera.lookAt(0, -0.3, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: q.antialias,
+      alpha: true,
+      powerPreference: "high-performance",
+      stencil: false,
+      depth: true,
+    });
     renderer.setSize(W, H);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, q.maxPixelRatio));
+    renderer.shadowMap.enabled = false;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.3;
     container.appendChild(renderer.domElement);
@@ -163,7 +186,7 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
       [0.21, 3.1], [0.235, 3.15], [0.235, 3.26], [0.21, 3.3], [0.21, 3.4],
     ].map(([x, y]) => new THREE.Vector2(x, y));
 
-    const bottleGeo = new THREE.LatheGeometry(shape, 64);
+    const bottleGeo = new THREE.LatheGeometry(shape, q.latheBottle);
     const glassMat = new THREE.MeshPhysicalMaterial({
       color: 0xb8ddf5,
       transparent: true,
@@ -186,7 +209,7 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
       [0.0, -0.06],
     ].map(([x, y]) => new THREE.Vector2(x, y));
 
-    const waterGeo = new THREE.LatheGeometry(waterShape, 64);
+    const waterGeo = new THREE.LatheGeometry(waterShape, q.latheWater);
     const waterMat = new THREE.MeshPhysicalMaterial({
       color: 0x2f9fd6,
       transparent: true,
@@ -199,9 +222,9 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     });
     G.add(new THREE.Mesh(waterGeo, waterMat));
 
-    const labelTex = buildLabelTexture(propsRef.current);
+    const labelTex = buildLabelTexture(propsRef.current, q.labelCanvasW, q.labelCanvasH);
     labelTextureRef.current = labelTex;
-    const labelGeo = new THREE.CylinderGeometry(0.625, 0.625, 2.1, 64, 1, true);
+    const labelGeo = new THREE.CylinderGeometry(0.625, 0.625, 2.1, q.labelCylinder, 1, true);
     const labelMat = new THREE.MeshStandardMaterial({
       map: labelTex,
       roughness: 0.25,
@@ -222,13 +245,13 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     });
     const ridgeMat = new THREE.MeshStandardMaterial({ color: 0x243560, roughness: 0.5 });
     const capGroup = new THREE.Group();
-    capGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.44, 64), capMat));
-    const topDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.04, 64), capMat);
+    capGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.44, q.capCylinder), capMat));
+    const topDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.04, q.capCylinder), capMat);
     topDisc.position.y = 0.24;
     capGroup.add(topDisc);
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < q.capRidges; i++) {
       const r = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.42, 0.024), ridgeMat);
-      const a = (i / 24) * Math.PI * 2;
+      const a = (i / q.capRidges) * Math.PI * 2;
       r.position.set(Math.cos(a) * 0.24, 0, Math.sin(a) * 0.24);
       r.rotation.y = -a;
       capGroup.add(r);
@@ -261,9 +284,12 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
       ior: 1.33,
     });
     const rng = (s: number) => Math.abs(Math.sin(s * 127.1 + 311.7));
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < q.dropletCount; i++) {
       const s = rng(i) * 0.042 + 0.012;
-      const d = new THREE.Mesh(new THREE.SphereGeometry(s, 8, 8), dropMat);
+      const d = new THREE.Mesh(
+        new THREE.SphereGeometry(s, q.dropletSphereWidth, q.dropletSphereHeight),
+        dropMat
+      );
       const a = rng(i + 50) * Math.PI * 2;
       d.position.set(Math.cos(a) * 0.635, (rng(i + 100) - 0.5) * 7.0, Math.sin(a) * 0.635);
       G.add(d);
@@ -283,12 +309,14 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     scene.add(refl);
 
     let targetRotation = 0;
-    let dragVelocity = 0;
     let pointerDown = false;
     let previousX = 0;
     let animId = 0;
     let isVisible = false;
+    let bobPhase = 0;
     const clock = new THREE.Clock();
+    const AUTO_ROTATE_RAD_PER_SEC = getBottleRotationRadPerSec();
+    const rotationFollowK = getBottleRotationFollowSharpness();
 
     const onPointerDown = (event: PointerEvent) => {
       pointerDown = true;
@@ -296,10 +324,9 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     };
     const onPointerMove = (event: PointerEvent) => {
       if (!pointerDown) return;
-      const delta = event.clientX - previousX;
+      const dx = event.clientX - previousX;
       previousX = event.clientX;
-      dragVelocity = delta * 0.0024;
-      targetRotation += dragVelocity;
+      targetRotation += dx * 0.0024;
     };
     const onPointerUp = () => {
       pointerDown = false;
@@ -311,14 +338,14 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
 
     const animate = () => {
       if (destroyed || !isVisible) return;
-      renderer.info.reset();
-      const t = clock.getElapsedTime();
+      const delta = Math.min(clock.getDelta(), 0.05);
       if (propsRef.current.autoRotate ?? true) {
-        targetRotation += 0.0026;
+        targetRotation += delta * AUTO_ROTATE_RAD_PER_SEC;
       }
-      G.rotation.y += (targetRotation - G.rotation.y) * 0.09;
-      G.position.y = Math.sin(t * 0.7) * 0.08;
-      dragVelocity *= 0.92;
+      const follow = 1 - Math.exp(-rotationFollowK * delta);
+      G.rotation.y += (targetRotation - G.rotation.y) * follow;
+      bobPhase += delta * 0.7;
+      G.position.y = Math.sin(bobPhase) * 0.08;
       renderer.render(scene, camera);
       animId = window.requestAnimationFrame(animate);
     };
@@ -344,13 +371,22 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     );
     visibilityObserver.observe(container);
 
-    const onResize = () => {
+    let resizeRafId = 0;
+    const applyCanvasSize = () => {
       const w = container.clientWidth;
       const h = container.clientHeight;
       if (w === 0 || h === 0) return;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, q.maxPixelRatio));
+    };
+    const onResize = () => {
+      if (resizeRafId !== 0) window.cancelAnimationFrame(resizeRafId);
+      resizeRafId = window.requestAnimationFrame(() => {
+        resizeRafId = 0;
+        applyCanvasSize();
+      });
     };
     const observer = new ResizeObserver(onResize);
     observer.observe(container);
@@ -363,6 +399,8 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
       visibilityObserver.disconnect();
       if (animId !== 0) window.cancelAnimationFrame(animId);
       animId = 0;
+      if (resizeRafId !== 0) window.cancelAnimationFrame(resizeRafId);
+      resizeRafId = 0;
       window.removeEventListener("resize", onResize);
       observer.disconnect();
       renderer.domElement.removeEventListener("pointerdown", onPointerDown);
@@ -387,7 +425,8 @@ function BottleSceneCustom(props: BottleSceneCustomProps) {
     if (!existingTexture || !existingMaterial) return;
     if (!glLiveRef.current) return;
 
-    const nextTexture = buildLabelTexture(props);
+    const { w, h } = labelCanvasSizeRef.current;
+    const nextTexture = buildLabelTexture(props, w, h);
     if (labelMaterialRef.current !== existingMaterial) return;
     existingMaterial.map = nextTexture;
     existingMaterial.needsUpdate = true;

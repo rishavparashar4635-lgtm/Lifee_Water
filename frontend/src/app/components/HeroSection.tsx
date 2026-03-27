@@ -1,5 +1,6 @@
 import { m, useScroll, useTransform } from "motion/react";
-import { lazy, Suspense, useMemo, useRef } from "react";
+import { lazy, memo, Suspense, useMemo, useRef } from "react";
+import { useHeroParticleCount, usePrefersReducedMotion } from "../utils/devicePerformance";
 
 const BottleScene = lazy(() => import("./BottleScene"));
 
@@ -8,8 +9,10 @@ const waveBgStyle = {
   backgroundSize: "100px 100px",
 } as const;
 
-export function HeroSection() {
+function HeroSectionInner() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropletCount = useHeroParticleCount();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
@@ -21,14 +24,14 @@ export function HeroSection() {
   const dropletMotion = useMemo(() => {
     const w = typeof window !== "undefined" ? window.innerWidth : 1200;
     const h = typeof window !== "undefined" ? window.innerHeight : 800;
-    return [...Array(12)].map(() => ({
+    return [...Array(dropletCount)].map(() => ({
       initX: Math.random() * w,
       endX: Math.random() * w,
       targetY: h + 20,
       duration: Math.random() * 5 + 5,
       delay: Math.random() * 5,
     }));
-  }, []);
+  }, [dropletCount]);
 
   return (
     <section
@@ -43,8 +46,16 @@ export function HeroSection() {
       >
         <div className="absolute inset-0 opacity-20">
           <m.div
-            animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
-            transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
+            animate={
+              prefersReducedMotion
+                ? undefined
+                : { backgroundPosition: ["0% 0%", "100% 100%"] }
+            }
+            transition={
+              prefersReducedMotion
+                ? undefined
+                : { duration: 28, repeat: Infinity, repeatType: "reverse" }
+            }
             className="absolute inset-0"
             style={waveBgStyle}
           />
@@ -127,3 +138,6 @@ export function HeroSection() {
     </section>
   );
 }
+
+export const HeroSection = memo(HeroSectionInner);
+HeroSectionInner.displayName = "HeroSection";
