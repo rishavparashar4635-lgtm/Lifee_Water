@@ -1,6 +1,7 @@
 import React, { memo, useRef, useEffect } from "react";
 import * as THREE from "three";
 import { destroyRendererAndScene } from "../utils/disposeThreeScene";
+import { getBottleQualityConfig, getBottleRotationRadPerSec } from "../utils/devicePerformance";
 
 function BottleScene() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -14,6 +15,8 @@ function BottleScene() {
 
     const initTimeoutId = window.setTimeout(() => {
       if (destroyed || !mountRef.current) return;
+
+      const q = getBottleQualityConfig();
 
       let W = container.clientWidth || Math.max(window.innerWidth / 2, 300);
       let H = container.clientHeight || Math.max(window.innerHeight, 500);
@@ -29,12 +32,15 @@ function BottleScene() {
 
       /* ── Renderer ── */
       const renderer = new THREE.WebGLRenderer({
-        antialias: true,
+        antialias: q.antialias,
         alpha: true,
         powerPreference: "high-performance",
+        stencil: false,
+        depth: true,
       });
       renderer.setSize(W, H);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, q.maxPixelRatio));
+      renderer.shadowMap.enabled = false;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.3;
       container.appendChild(renderer.domElement);
@@ -95,7 +101,7 @@ function BottleScene() {
         [0.21, 3.4],
       ].map(([x, y]) => new THREE.Vector2(x, y));
 
-      const bottleGeo = new THREE.LatheGeometry(shape, 64);
+      const bottleGeo = new THREE.LatheGeometry(shape, q.latheBottle);
       const glassMat = new THREE.MeshPhysicalMaterial({
         color: 0xb8ddf5,
         transparent: true,
@@ -131,7 +137,7 @@ function BottleScene() {
         [0.0, -0.06],
       ].map(([x, y]) => new THREE.Vector2(x, y));
 
-      const waterGeo = new THREE.LatheGeometry(waterShape, 50);
+      const waterGeo = new THREE.LatheGeometry(waterShape, q.latheWater);
       const waterMat = new THREE.MeshPhysicalMaterial({
         color: 0x2f9fd6,
         transparent: true,
@@ -146,10 +152,12 @@ function BottleScene() {
 
       /* ── Label ── */
       const lc = document.createElement("canvas");
-      lc.width = 1024;
-      lc.height = 640;
+      lc.width = q.labelCanvasW;
+      lc.height = q.labelCanvasH;
       const ctx = lc.getContext("2d");
       if (ctx) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(q.labelCanvasW / 1024, q.labelCanvasH / 640);
         const lg = ctx.createLinearGradient(0, 0, 1024, 0);
         lg.addColorStop(0, "#0f435b");
         lg.addColorStop(0.25, "#144960");
@@ -198,7 +206,7 @@ function BottleScene() {
         ctx.fillText("PURE & NATURAL", 512, 528);
 
         const labelTex = new THREE.CanvasTexture(lc);
-        const labelGeo = new THREE.CylinderGeometry(0.625, 0.625, 2.1, 64, 1, true);
+        const labelGeo = new THREE.CylinderGeometry(0.625, 0.625, 2.1, q.labelCylinder, 1, true);
         const labelMat = new THREE.MeshStandardMaterial({
           map: labelTex,
           roughness: 0.25,
@@ -219,14 +227,14 @@ function BottleScene() {
       const ridgeMat = new THREE.MeshStandardMaterial({ color: 0x243560, roughness: 0.6 });
       const capGroup = new THREE.Group();
       capGroup.add(
-        Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.44, 64), capMat))
+        Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.44, q.capCylinder), capMat))
       );
-      const topDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.04, 64), capMat);
+      const topDisc = new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.04, q.capCylinder), capMat);
       topDisc.position.y = 0.24;
       capGroup.add(topDisc);
-      for (let i = 0; i < 24; i++) {
+      for (let i = 0; i < q.capRidges; i++) {
         const r = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.42, 0.024), ridgeMat);
-        const a = (i / 24) * Math.PI * 2;
+        const a = (i / q.capRidges) * Math.PI * 2;
         r.position.set(Math.cos(a) * 0.24, 0, Math.sin(a) * 0.24);
         r.rotation.y = -a;
         capGroup.add(r);
@@ -261,9 +269,12 @@ function BottleScene() {
         ior: 1.33,
       });
       const rng = (s: number) => Math.abs(Math.sin(s * 127.1 + 311.7));
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < q.dropletCount; i++) {
         const s = rng(i) * 0.042 + 0.012;
-        const d = new THREE.Mesh(new THREE.SphereGeometry(s, 5, 8), dropMat);
+        const d = new THREE.Mesh(
+          new THREE.SphereGeometry(s, q.dropletSphereWidth, q.dropletSphereHeight),
+          dropMat
+        );
         const a = rng(i + 50) * Math.PI * 2;
         d.position.set(Math.cos(a) * 0.635, (rng(i + 100) - 0.5) * 7.0, Math.sin(a) * 0.635);
         G.add(d);
@@ -283,17 +294,23 @@ function BottleScene() {
       refl.position.y = -3.72;
       scene.add(refl);
 
-      /* ── Animation loop (paused when off-screen) ── */
+      /* ── Animation loop (paused when off-screen) — delta-based for stable speed on all refresh rates ── */
       const clock = new THREE.Clock();
+      const ROTATION_RAD_PER_SEC = getBottleRotationRadPerSec();
+      const BOB_ANGULAR_FREQ = 0.7;
+      const BOB_AMPLITUDE = 0.08;
+      let rotationY = 0;
+      let bobPhase = 0;
       let animId = 0;
       let isVisible = false;
 
       const animate = () => {
         if (destroyed || !isVisible) return;
-        renderer.info.reset();
-        const t = clock.getElapsedTime();
-        G.rotation.y = t * 0.28;
-        G.position.y = Math.sin(t * 0.7) * 0.08;
+        const delta = Math.min(clock.getDelta(), 0.05);
+        rotationY += delta * ROTATION_RAD_PER_SEC;
+        bobPhase += delta * BOB_ANGULAR_FREQ;
+        G.rotation.y = rotationY;
+        G.position.y = Math.sin(bobPhase) * BOB_AMPLITUDE;
         renderer.render(scene, camera);
         animId = requestAnimationFrame(animate);
       };
@@ -319,14 +336,23 @@ function BottleScene() {
       );
       visibilityObserver.observe(container);
 
-      /* ── Resize Observer ── */
-      const onResize = () => {
+      /* ── Resize (rAF-coalesced — avoids mobile URL-bar / orientation thrash blanking the canvas) ── */
+      let resizeRafId = 0;
+      const applyCanvasSize = () => {
         const w = container.clientWidth;
         const h = container.clientHeight;
         if (w === 0 || h === 0) return;
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, q.maxPixelRatio));
+      };
+      const onResize = () => {
+        if (resizeRafId !== 0) cancelAnimationFrame(resizeRafId);
+        resizeRafId = requestAnimationFrame(() => {
+          resizeRafId = 0;
+          applyCanvasSize();
+        });
       };
       const resizeObserver = new ResizeObserver(onResize);
       resizeObserver.observe(container);
@@ -336,6 +362,8 @@ function BottleScene() {
         visibilityObserver.disconnect();
         if (animId !== 0) cancelAnimationFrame(animId);
         animId = 0;
+        if (resizeRafId !== 0) cancelAnimationFrame(resizeRafId);
+        resizeRafId = 0;
         window.removeEventListener("resize", onResize);
         resizeObserver.disconnect();
         destroyRendererAndScene(scene, renderer, container);

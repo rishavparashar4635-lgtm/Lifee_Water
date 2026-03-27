@@ -1,14 +1,20 @@
 import { m, useInView } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Send, Phone, Mail, MapPin, MessageCircle } from "lucide-react";
+import { Send, Phone, Mail, MapPin, Download } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 
 const STATUS_HIDE_MS = 10000;
 const REQUEST_TIMEOUT_MS = 12000;
 
+/** Served from `frontend/public/file/CV-YADAV.pdf` → URL path `/file/CV-YADAV.pdf`. */
+const BROCHURE_PDF_HREF = `${import.meta.env.BASE_URL}file/CV-YADAV.pdf`;
+
 export function ContactSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const whatsappPhoneNumber = "919876543210";
+  const whatsappMessage = "Hello, I am interested in your service";
+  const whatsappLink = `https://wa.me/${whatsappPhoneNumber}?text=${encodeURIComponent(whatsappMessage)}`;
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -326,20 +332,26 @@ export function ContactSection() {
             >
               <h3 className="text-white font-semibold mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <m.button
+                <m.a
+                  href={whatsappLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   whileHover={{ scale: 1.02, x: 5 }}
-                  className="w-full p-4 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all"
+                  className="w-full p-4 rounded-xl bg-gradient-to-r from-green-600 to-green-500 text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all cursor-pointer hover:brightness-110"
                 >
                   <FaWhatsapp size={20} color="#FFFFFF" />
                   WhatsApp Us
-                </m.button>
+                </m.a>
                 
-                <m.button
+                <m.a
+                  href={BROCHURE_PDF_HREF}
+                  download="CV-YADAV.pdf"
                   whileHover={{ scale: 1.02, x: 5 }}
-                  className="w-full p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
+                  className="w-full p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
+                  <Download className="w-5 h-5 shrink-0" />
                   Download Brochure
-                </m.button>
+                </m.a>
               </div>
             </m.div>
           </m.div>
@@ -348,7 +360,7 @@ export function ContactSection() {
 
       {/* WhatsApp floating button */}
       <m.a
-        href="https://wa.me/919876543210"
+        href={whatsappLink}
         target="_blank"
         rel="noopener noreferrer"
         initial={{ opacity: 0, scale: 0 }}
@@ -356,7 +368,7 @@ export function ContactSection() {
         transition={{ delay: 1, type: "spring" }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        className="fixed bottom-5 right-4 sm:bottom-8 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-2xl shadow-green-500/50 hover:shadow-green-500/70 transition-all z-30 group"
+        className="fixed bottom-5 right-4 sm:bottom-8 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-2xl shadow-green-500/50 hover:shadow-green-500/70 transition-all z-30 group cursor-pointer hover:brightness-110"
       >
         <FaWhatsapp className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
         

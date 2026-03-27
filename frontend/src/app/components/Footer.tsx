@@ -100,20 +100,22 @@ export function Footer() {
             <h4 className="text-lg font-semibold mb-4 text-white">Services</h4>
             <ul className="space-y-2">
               {[
-                { label: "Home Delivery", href: "#contact" },
-                { label: "Bulk Orders", href: "#products" },
-                { label: "Corporate Supply", href: "#contact" },
-                { label: "Distribution Partnership", href: "#distribution" },
-                { label: "Customer Support", href: "#contact" },
+                { label: "Home Delivery", to: "/#contact" },
+                { label: "Bulk Orders", to: "/#products" },
+                { label: "Corporate Supply", to: "/#contact" },
+                { label: "Distribution Partnership", to: "/#distribution" },
+                { label: "Customer Support", to: "/#contact" },
               ].map((service, i) => (
                 <li key={i}>
-                  <m.a
-                    href={service.href}
-                    whileHover={{ x: 5 }}
-                    className="text-cyan-100/70 hover:text-cyan-400 transition-colors text-sm"
-                  >
-                    {service.label}
-                  </m.a>
+                  <m.div whileHover={{ x: 5 }}>
+                    <Link
+                      to={service.to}
+                      prefetch="intent"
+                      className="text-cyan-100/70 hover:text-cyan-400 transition-colors text-sm inline-block"
+                    >
+                      {service.label}
+                    </Link>
+                  </m.div>
                 </li>
               ))}
             </ul>

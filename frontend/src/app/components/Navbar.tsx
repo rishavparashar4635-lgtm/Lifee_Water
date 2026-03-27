@@ -1,23 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
-import { Home, Info, Cog, Package, Phone, Menu, X } from "lucide-react";
+import { Home, Info, Cog, Package, Phone, Menu, X, Award } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { m, AnimatePresence } from "motion/react";
 import { throttle } from "../utils/throttle";
+import { suppressSectionScrollSpy } from "../hooks/useSectionNavigation";
 
 const navItems = [
   { label: "Home", id: "home", icon: Home },
   { label: "About", id: "about", icon: Info },
   { label: "Process", id: "process", icon: Cog },
   { label: "Products", id: "products", icon: Package },
+  { label: "Certifications", id: "certifications", icon: Award },
   { label: "Contact", id: "contact", icon: Phone },
 ] as const;
-
-function scrollToSection(id: string) {
-  const el = document.getElementById(id);
-  if (el) {
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}
 
 export function Navbar() {
   const navigate = useNavigate();
@@ -36,13 +31,15 @@ export function Navbar() {
 
   const handleSectionNav = useCallback(
     (id: string) => {
-      if (location.pathname !== "/") {
-        navigate(`/#${id}`);
-      } else {
-        scrollToSection(id);
+      suppressSectionScrollSpy();
+      const nextHash = `#${id}`;
+      if (location.pathname === "/" && location.hash === nextHash) {
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
       }
+      navigate({ pathname: "/", hash: nextHash }, { replace: false, preventScrollReset: false });
     },
-    [location.pathname, navigate]
+    [location.pathname, location.hash, navigate]
   );
 
   const onNavItemClick = useCallback(
@@ -52,6 +49,9 @@ export function Navbar() {
     },
     [closeMenu, handleSectionNav]
   );
+
+  const activeId =
+    location.pathname === "/" ? (location.hash.replace(/^#/, "") || "home") : "";
 
   return (
     <header
@@ -71,12 +71,18 @@ export function Navbar() {
           <nav className="hidden md:flex items-center gap-8">
             {navItems.map((item) => {
               const Icon = item.icon;
+              const isActive = activeId === item.id;
               return (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => handleSectionNav(item.id)}
-                  className="text-cyan-100/90 hover:text-cyan-300 transition-colors text-sm font-medium inline-flex items-center gap-2 bg-transparent border-0 cursor-pointer p-0 font-inherit"
+                  aria-current={isActive ? "page" : undefined}
+                  className={`text-sm font-medium inline-flex items-center gap-2 bg-transparent border-0 cursor-pointer p-0 font-inherit transition-colors ${
+                    isActive
+                      ? "text-cyan-300 underline decoration-cyan-400/80 underline-offset-8"
+                      : "text-cyan-100/90 hover:text-cyan-300"
+                  }`}
                 >
                   <Icon className="w-4 h-4" />
                   {item.label}
@@ -112,12 +118,18 @@ export function Navbar() {
               <div className="mobile-nav">
               {navItems.map((item) => {
                 const Icon = item.icon;
+                const isActive = activeId === item.id;
                 return (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => onNavItemClick(item.id)}
-                    className="min-h-11 w-full flex items-center gap-2 px-2 py-3 text-cyan-100/90 hover:text-cyan-300 hover:bg-white/5 rounded-md transition-all bg-transparent border-0 cursor-pointer text-left font-inherit"
+                    aria-current={isActive ? "page" : undefined}
+                    className={`min-h-11 w-full flex items-center gap-2 px-2 py-3 rounded-md transition-all bg-transparent border-0 cursor-pointer text-left font-inherit ${
+                      isActive
+                        ? "text-cyan-300 bg-white/10"
+                        : "text-cyan-100/90 hover:text-cyan-300 hover:bg-white/5"
+                    }`}
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
