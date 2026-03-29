@@ -3,7 +3,9 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    secure: process.env.SMTP_SECURE === 'true',
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -11,24 +13,22 @@ const transporter = nodemailer.createTransport({
     tls: {
         rejectUnauthorized: false,
     },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
 });
 
+// Verify on startup
 transporter.verify((error, success) => {
     if (error) {
-        console.error('SMTP FULL ERROR:', error);
-        console.error('SMTP ERROR CODE:', error.code);
-        console.error('SMTP ERROR MESSAGE:', error.message);
+        console.error('❌ SMTP Error:', error.message);
+        console.log('Check your .env file:');
+        console.log('SMTP_USER:', process.env.SMTP_USER);
+        console.log('SMTP_HOST:', process.env.SMTP_HOST);
+        console.log('SMTP_PORT:', process.env.SMTP_PORT);
     } else {
-        console.log('SMTP Server Ready to Send Emails');
+        console.log('✅ SMTP Ready');
+        console.log('Sending from:', process.env.SMTP_USER);
+        console.log('Sending to:', process.env.RECEIVER_EMAIL);
     }
 });
-
-/** Inbox for form notifications — RECEIVER_EMAIL, or SMTP_USER when unset */
-const getInboxRecipient = () =>
-  (process.env.RECEIVER_EMAIL || process.env.SMTP_USER || '').trim();
 
 const ICONS = {
     '👤': `<span style="font-size:16px;line-height:1;">&#128100;</span>`,
@@ -227,19 +227,10 @@ exports.sendContactEmail = async (req, res) => {
     });
   }
 
-  const inboxTo = getInboxRecipient();
-  if (!inboxTo) {
-    return res.status(503).json({
-      success: false,
-      error:
-        'Email inbox is not configured. Set RECEIVER_EMAIL or SMTP_USER in backend/.env.',
-    });
-  }
-
   try {
     await sendMailWithTimeout({
-      from: `"LIFEE Premium Water" <${process.env.SMTP_USER}>`,
-      to: inboxTo,
+      from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
+      to: process.env.RECEIVER_EMAIL,
       subject: `New Message from ${name} — LIFEE`,
       html: emailWrapper(`
         <!-- Alert Banner -->
@@ -328,7 +319,7 @@ exports.sendContactEmail = async (req, res) => {
 
     // Send customer acknowledgement in background to keep API response fast.
     sendMailWithTimeout({
-      from: `"LIFEE Premium Water" <${process.env.SMTP_USER}>`,
+      from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
       to: email,
       subject: `We received your message — LIFEE Water`,
       html: emailWrapper(`
@@ -401,19 +392,10 @@ exports.sendOrderEmail = async (req, res) => {
     });
   }
 
-  const inboxTo = getInboxRecipient();
-  if (!inboxTo) {
-    return res.status(503).json({
-      success: false,
-      error:
-        'Email inbox is not configured. Set RECEIVER_EMAIL or SMTP_USER in backend/.env.',
-    });
-  }
-
   try {
     await sendMailWithTimeout({
-      from: `"LIFEE Premium Water" <${process.env.SMTP_USER}>`,
-      to: inboxTo,
+      from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
+      to: process.env.RECEIVER_EMAIL,
       subject: `New Order Request - ${name}`,
       html: `
         <h2>New Order Request</h2>
@@ -429,7 +411,7 @@ exports.sendOrderEmail = async (req, res) => {
 
     // Send customer acknowledgement in background to keep API response fast.
     sendMailWithTimeout({
-      from: `"LIFEE Premium Water" <${process.env.SMTP_USER}>`,
+      from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
       to: email,
       subject: 'Your Order Request - LIFEE Water',
       html: `
@@ -474,19 +456,10 @@ exports.sendDistributorEmail = async (req, res) => {
     });
   }
 
-  const inboxTo = getInboxRecipient();
-  if (!inboxTo) {
-    return res.status(503).json({
-      success: false,
-      error:
-        'Email inbox is not configured. Set RECEIVER_EMAIL or SMTP_USER in backend/.env.',
-    });
-  }
-
   try {
     await sendMailWithTimeout({
-      from: `"LIFEE Premium Water" <${process.env.SMTP_USER}>`,
-      to: inboxTo,
+      from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
+      to: process.env.RECEIVER_EMAIL,
       subject: `New Distributor Application — ${name}`,
       html: emailWrapper(`
         <div style="
@@ -584,7 +557,7 @@ exports.sendDistributorEmail = async (req, res) => {
 
     // Send customer acknowledgement in background to keep API response fast.
     sendMailWithTimeout({
-      from: `"LIFEE Premium Water" <${process.env.SMTP_USER}>`,
+      from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
       to: email,
       subject: `Application Received — LIFEE Distributor`,
       html: emailWrapper(`
@@ -667,15 +640,6 @@ exports.sendCustomOrderEmail = async (req, res) => {
     });
   }
 
-  const inboxTo = getInboxRecipient();
-  if (!inboxTo) {
-    return res.status(503).json({
-      success: false,
-      error:
-        'Email inbox is not configured. Set RECEIVER_EMAIL or SMTP_USER in backend/.env.',
-    });
-  }
-
   const displayName = names || companyName || birthdayName || 'Not specified';
   const formattedEventDate = eventDate ? formatEventDate(eventDate) : 'Not specified';
   console.log('uploadedImage received:', 
@@ -686,8 +650,8 @@ exports.sendCustomOrderEmail = async (req, res) => {
 
   try {
     await sendMailWithTimeout({
-      from: `"LIFEE Premium Water" <${process.env.SMTP_USER}>`,
-      to: inboxTo,
+      from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
+      to: process.env.RECEIVER_EMAIL,
       subject: `New ${orderType} Order — ${contactName}`,
       html: emailWrapper(`
         <div style="
@@ -796,7 +760,7 @@ exports.sendCustomOrderEmail = async (req, res) => {
 
     // Send customer acknowledgement in background to keep API response fast.
     sendMailWithTimeout({
-      from: `"LIFEE Premium Water" <${process.env.SMTP_USER}>`,
+      from: `"${process.env.COMPANY_NAME}" <${process.env.SMTP_USER}>`,
       to: email,
       subject: `Your ${orderType} Order Received — LIFEE`,
       html: emailWrapper(`
