@@ -6,6 +6,30 @@ const compression = require('compression');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
+// Check all required env variables
+const requiredEnvVars = [
+    'SMTP_USER',
+    'SMTP_PASS',
+    'RECEIVER_EMAIL',
+    'COMPANY_NAME',
+    'FRONTEND_URL',
+];
+
+const missingVars = requiredEnvVars.filter(
+    (key) => !process.env[key]
+);
+
+if (missingVars.length > 0) {
+    console.error('❌ Missing .env variables:');
+    missingVars.forEach((v) => console.error(`   - ${v}`));
+    console.error('Please add them to backend/.env file');
+} else {
+    console.log('✅ All environment variables loaded');
+    console.log('📧 SMTP User:', process.env.SMTP_USER);
+    console.log('📬 Receiver:', process.env.RECEIVER_EMAIL);
+    console.log('🏢 Company:', process.env.COMPANY_NAME);
+}
+
 // 🔥 Catch hidden errors
 process.on("uncaughtException", (err) => {
     console.error("❌ Uncaught Exception:", err);
@@ -56,15 +80,9 @@ const limiter = rateLimit({
 // CORS
 app.use(
     cors({
-        origin: [
-            'http://localhost:3000',
-            'http://localhost:5173',
-            /^http:\/\/localhost:\d+$/,
-            /^http:\/\/127\.0\.0\.1:\d+$/,
-        ],
+        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
         methods: ['GET', 'POST', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-        credentials: true,
+        allowedHeaders: ['Content-Type'],
     })
 );
 
